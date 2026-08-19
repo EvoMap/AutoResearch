@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="700" viewBox="0 0 1240 700" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif">
+<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#6b7280"/></marker></defs>
+<rect width="1240" height="700" fill="#ffffff"/>
+
+<text x="40" y="44" font-size="21" fill="#111827" font-weight="600">Idea Forge 四道闸门：判不了的时候各自倒向哪边</text>
+<text x="40" y="68" font-size="12.5" fill="#4b5563">一道闸门的性格，看它在缺材料、调用失败、判定读不出来时怎么办。绿=倒向拦下，灰=不是闸门，橙=仍有已知缺口。</text>
+
+<rect x="40" y="96" width="272" height="196" rx="6" fill="#ecfdf5" stroke="#15803d"/>
+<text x="56" y="122" font-size="13.5" fill="#111827" font-weight="600">闸门一 · 深度构思</text>
+<text x="56" y="141" font-size="10.5" fill="#6b7280">step1_deep_ideation</text>
+<text x="56" y="166" font-size="11" fill="#111827">· 领域知识注入 idea 提示词</text>
+<text x="56" y="186" font-size="11" fill="#111827">· 3 个模型各构思一轮</text>
+<text x="56" y="212" font-size="11" fill="#15803d">→ 只跑被点名的方向</text>
+<text x="56" y="232" font-size="11" fill="#6b7280">　 注册的 4 个 + config 点名的</text>
+<text x="56" y="252" font-size="11" fill="#15803d">→ 名字对不上：开跑前报错</text>
+<text x="56" y="272" font-size="11" fill="#6b7280">　 打错字和文件没传都在这里露头</text>
+
+<rect x="332" y="96" width="272" height="196" rx="6" fill="#fffbeb" stroke="#b45309"/>
+<text x="348" y="122" font-size="13.5" fill="#111827" font-weight="600">闸门二 · 严格交叉验证</text>
+<text x="348" y="141" font-size="10.5" fill="#6b7280">step2_strict_validation</text>
+<text x="348" y="166" font-size="11" fill="#111827">· 3 个模型互评，≥2 票通过</text>
+<text x="348" y="192" font-size="11" fill="#15803d">→ 调用失败：不计票</text>
+<text x="348" y="212" font-size="11" fill="#6b7280">　 少一票只会更难通过，且打印</text>
+<text x="348" y="238" font-size="11" fill="#b45309">→ 判定用子串匹配读</text>
+<text x="348" y="258" font-size="11" fill="#6b7280">　 「不通过」里含「通过」</text>
+<text x="348" y="280" font-size="10.5" fill="#b45309" font-weight="600">issue #26</text>
+
+<rect x="624" y="96" width="272" height="196" rx="6" fill="#f9fafb" stroke="#d1d5db"/>
+<text x="640" y="122" font-size="13.5" fill="#111827" font-weight="600">闸门二.5 · 时新性刷新</text>
+<text x="640" y="141" font-size="10.5" fill="#6b7280">step2_5_freshness_refresh</text>
+<text x="640" y="166" font-size="11" fill="#111827">· 基线和数据集是否过时</text>
+<text x="640" y="192" font-size="11" fill="#6b7280">· 只改写，不否决</text>
+<text x="640" y="212" font-size="11" fill="#6b7280">· 旧基线可以就地升级，</text>
+<text x="640" y="232" font-size="11" fill="#6b7280">　 不必为此毙掉一条 idea</text>
+<text x="640" y="258" font-size="11" fill="#374151" font-weight="600">这一步不是闸门</text>
+
+<rect x="916" y="96" width="284" height="196" rx="6" fill="#ecfdf5" stroke="#15803d"/>
+<text x="932" y="122" font-size="13.5" fill="#111827" font-weight="600">闸门三 · 共识检查</text>
+<text x="932" y="141" font-size="10.5" fill="#6b7280">consensus_check</text>
+<text x="932" y="166" font-size="11" fill="#111827">· 对照领域的「常见误区」把关</text>
+<text x="932" y="192" font-size="11" fill="#15803d">→ 判不了：记 unchecked</text>
+<text x="932" y="212" font-size="11" fill="#6b7280">　 passed 仍为 false，不读成通过</text>
+<text x="932" y="238" font-size="11" fill="#15803d">→ b_id 两边都没有：拒绝</text>
+<text x="932" y="258" font-size="11" fill="#6b7280">　 那是管线 bug，不是用户的选择</text>
+<text x="932" y="280" font-size="10.5" fill="#15803d" font-weight="600">issue #25 已闭合</text>
+
+<line x1="312" y1="194" x2="330" y2="194" stroke="#6b7280" marker-end="url(#ar)"/>
+<line x1="604" y1="194" x2="622" y2="194" stroke="#6b7280" marker-end="url(#ar)"/>
+<line x1="896" y1="194" x2="914" y2="194" stroke="#6b7280" marker-end="url(#ar)"/>
+
+<text x="40" y="348" font-size="15" fill="#111827" font-weight="600">闸门三为什么记一笔而不是拦下</text>
+<text x="40" y="372" font-size="12" fill="#4b5563">走到这一步，一条 idea 已经花掉闸门一的 3 次构思和闸门二的 9 次互评。因缺材料把它丢掉，扔的是已经付过的钱，</text>
+<text x="40" y="392" font-size="12" fill="#4b5563">换不到任何信息；带着「没检查过」进 Step 3，读的人自己能判断要不要信。</text>
+
+<rect x="40" y="412" width="1160" height="30" fill="#f3f4f6"/>
+<text x="56" y="432" font-size="11.5" fill="#374151" font-weight="600">产出里的三种状态</text>
+<text x="300" y="432" font-size="11.5" fill="#374151" font-weight="600">什么时候出现</text>
+<text x="700" y="432" font-size="11.5" fill="#374151" font-weight="600">怎么读</text>
+
+<text x="56" y="464" font-size="11.5" fill="#15803d">passed=true　status="pass"</text>
+<text x="300" y="464" font-size="11.5" fill="#374151">评审看过材料，给了通过</text>
+<text x="700" y="464" font-size="11.5" fill="#374151">这条 idea 没撞领域里公认的坑</text>
+<line x1="40" y1="476" x2="1200" y2="476" stroke="#e5e7eb"/>
+
+<text x="56" y="496" font-size="11.5" fill="#b91c1c">passed=false status="reject"</text>
+<text x="300" y="496" font-size="11.5" fill="#374151">评审看过材料，给了否决</text>
+<text x="700" y="496" font-size="11.5" fill="#374151">撞了坑，或落在创新切入点清单之外</text>
+<line x1="40" y1="508" x2="1200" y2="508" stroke="#e5e7eb"/>
+
+<text x="56" y="528" font-size="11.5" fill="#b45309">passed=false status="unchecked"</text>
+<text x="300" y="528" font-size="11.5" fill="#374151">文件缺、缺那两节、调用失败、判定读不出</text>
+<text x="700" y="528" font-size="11.5" fill="#374151">这道闸门没有意见，别当成它放行了</text>
+
+<rect x="40" y="566" width="1160" height="104" rx="6" fill="#fff7ed" stroke="#c2410c"/>
+<text x="56" y="592" font-size="13" fill="#111827" font-weight="600">修之前是什么样</text>
+<text x="56" y="616" font-size="11.5" fill="#374151">原实现在上面这几种情形下一律返回通过，产出里记 passed=true——和「评审看过并放行」一模一样，事后分不出来。</text>
+<text x="56" y="638" font-size="11.5" fill="#374151">按方向分组的通过率 100%，理由字面写着「无知识 MD，跳过检查」：闸门失效的证据一直在产出里，只是没人会去读一列全是 100% 的表。</text>
+<text x="56" y="660" font-size="11.5" fill="#374151">第一版修复改成了拦下，于是用户没上传知识文件的领域，一条 idea 都出不来——误标换成了误杀。三态才同时解决这两个。</text>
+<text x="40" y="690" font-size="11.5" fill="#6b7280">取自 src/idea_forge/forge.py 的 step1_deep_ideation 与 step2_strict_validation、freshness.py 的 step2_5_freshness_refresh、consensus_check.py。</text>
+</svg>

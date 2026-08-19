@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="660" viewBox="0 0 1300 660" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif">
+<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#6b7280"/></marker><marker id="arGray" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#9ca3af"/></marker></defs>
+<rect width="1300" height="660" fill="#ffffff"/>
+<text x="40" y="44" font-size="21" fill="#111827" font-weight="600" text-anchor="start">AutoResearch 的两条流程</text>
+<text x="40" y="68" font-size="12.5" fill="#4b5563" font-weight="400" text-anchor="start">实线=一次运行里自动发生；虚线=另外手动跑，产物落成文件等下游来读。两条流程可以衔接，也可以只用其中一条。</text>
+
+<text x="40" y="106" font-size="14" fill="#111827" font-weight="600" text-anchor="start">一、Idea Generation：python idea_generation.py 一条命令跑完</text>
+<rect x="40" y="120" width="220" height="96" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="56" y="144" font-size="13" fill="#111827" font-weight="600" text-anchor="start">真实研究信号</text>
+<text x="56" y="166" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· arXiv / 会议 / 社区 / 媒体</text>
+<text x="56" y="184" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 开源趋势</text>
+<text x="56" y="202" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 采集器在 src/collectors/</text>
+
+<rect x="290" y="120" width="220" height="96" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="306" y="144" font-size="13" fill="#111827" font-weight="600" text-anchor="start">pipeline_v4</text>
+<text x="306" y="166" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 采集 → 打分 → 取 top_k</text>
+<text x="306" y="184" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 拿不到分就记「没有分」，</text>
+<text x="306" y="202" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">  不补中间值</text>
+
+<rect x="540" y="120" width="220" height="96" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="556" y="144" font-size="13" fill="#111827" font-weight="600" text-anchor="start">Idea Forge</text>
+<text x="556" y="166" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· Step 1 A×B 多席位构思</text>
+<text x="556" y="184" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· Step 2 交叉评审 + 2.5 刷新</text>
+<text x="556" y="202" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· Step 3 出计划书</text>
+
+<rect x="790" y="120" width="220" height="96" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="806" y="144" font-size="13" fill="#111827" font-weight="600" text-anchor="start">idea_provenance.py</text>
+<text x="806" y="166" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· export 把选中的 idea</text>
+<text x="812" y="184" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">  写成执行流程的入口文件</text>
+<text x="806" y="202" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 同时记录 SHA256 与知识方向</text>
+
+<rect x="1040" y="120" width="220" height="96" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="1056" y="144" font-size="13" fill="#111827" font-weight="600" text-anchor="start">data/ideas/*.txt</text>
+<text x="1056" y="166" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 一个 idea 一个文件</text>
+<text x="1056" y="184" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 手写的 idea 放这里，</text>
+<text x="1056" y="202" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">  同样能进第二条流程</text>
+
+<path d="M260,168 L286,168" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+<path d="M510,168 L536,168" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+<path d="M760,168 L786,168" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+<path d="M1010,168 L1036,168" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+<rect x="190" y="256" width="240" height="96" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-dasharray="5 4"/>
+<text x="206" y="280" font-size="13" fill="#4b5563" font-weight="600" text-anchor="start">GPT Researcher（官方上游）</text>
+<text x="206" y="302" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· research_to_knowledge.py</text>
+<text x="206" y="320" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 先写入待审草稿目录</text>
+<text x="206" y="338" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 显式确认联网，依赖单独装</text>
+
+<rect x="540" y="256" width="220" height="96" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="556" y="280" font-size="13" fill="#111827" font-weight="600" text-anchor="start">knowledge_base/*.md</text>
+<text x="556" y="302" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 方向文档清单由 B_LIBRARY 现查</text>
+<text x="556" y="320" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 默认启用项由 config 声明</text>
+<text x="556" y="338" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 共识检查拿「常见误区」比对</text>
+
+<path d="M430,316 L536,316" stroke="#9ca3af" stroke-width="1.6" fill="none" marker-end="url(#arGray)" stroke-dasharray="5 4"/>
+<text x="483" y="302" font-size="10.5" fill="#9ca3af" font-weight="400" text-anchor="middle">人工核对后接纳</text>
+<path d="M650,256 L650,220" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+<text x="664" y="242" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">作为知识方向的领域上下文注入</text>
+
+<text x="40" y="424" font-size="14" fill="#111827" font-weight="600" text-anchor="start">二、Idea 执行：/ar-coordinator &lt;idea 文件&gt;</text>
+<rect x="40" y="438" width="140" height="72" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="54" y="462" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">plan</text>
+<text x="54" y="482" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">ar-planner 起草，</text>
+<text x="54" y="498" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">reviewer 判过不过</text>
+
+<rect x="194" y="438" width="140" height="72" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="208" y="462" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">code</text>
+<text x="208" y="482" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">ar-coder 写，大模块</text>
+<text x="208" y="498" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">拆给 subcoder</text>
+
+<rect x="348" y="438" width="140" height="72" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="362" y="462" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">review</text>
+<text x="362" y="482" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">外部模型审代码，</text>
+<text x="362" y="498" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">走 MCP 工具</text>
+
+<rect x="502" y="438" width="140" height="72" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="516" y="462" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">run</text>
+<text x="516" y="482" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">ar-runner 跑实验，</text>
+<text x="516" y="498" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">monitor 盯 log</text>
+
+<rect x="656" y="438" width="140" height="72" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="670" y="462" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">结果分析</text>
+<text x="670" y="482" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">提关键发现、失败点</text>
+<text x="670" y="498" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">和下一轮重点</text>
+
+<rect x="810" y="438" width="140" height="72" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="824" y="462" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">critic</text>
+<text x="824" y="482" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">外部模型挑战</text>
+<text x="824" y="498" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">「现在能不能收」</text>
+
+<rect x="964" y="438" width="140" height="72" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="978" y="462" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">盲审</text>
+<text x="978" y="482" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">无记忆冷启动打分，</text>
+<text x="978" y="498" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">挤掉自评水分</text>
+
+<rect x="1118" y="438" width="140" height="72" rx="6" fill="#ffffff" stroke="#9ca3af"/>
+<text x="1132" y="462" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">close</text>
+<text x="1132" y="482" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">队列清空才输出</text>
+<text x="1132" y="498" font-size="10" fill="#4b5563" font-weight="400" text-anchor="start">完成标记</text>
+
+<path d="M180,474 L192,474" stroke="#6b7280" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+<path d="M334,474 L346,474" stroke="#6b7280" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+<path d="M488,474 L500,474" stroke="#6b7280" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+<path d="M642,474 L654,474" stroke="#6b7280" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+<path d="M796,474 L808,474" stroke="#6b7280" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+<path d="M950,474 L962,474" stroke="#6b7280" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+<path d="M1104,474 L1116,474" stroke="#6b7280" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+
+<rect x="40" y="534" width="1220" height="86" rx="6" fill="#f9fafb" stroke="#d1d5db"/>
+<text x="56" y="558" font-size="12.5" fill="#111827" font-weight="600" text-anchor="start">这条链由 ar-workflow-engine.py 驱动，不靠会话记忆</text>
+<text x="56" y="578" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· workflow_queue.json 是唯一队列。一轮只推进一个单元，中断后按队列接着跑，不从头重来</text>
+<text x="56" y="596" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 默认两阶段：Phase 1 pilot 先低成本验证 idea，达标才追加 Phase 2 主实验；不达标就记录原因收尾</text>
+<text x="56" y="614" font-size="10.5" fill="#4b5563" font-weight="400" text-anchor="start">· 结果分析完 engine 自动追加 critic，critic 放行后强制插一次盲审；就绪面 ≥2 时 worker 抢占并行，同构批量走 ar_swarm</text>
+
+<text x="40" y="650" font-size="10.5" fill="#9ca3af" font-weight="400" text-anchor="start">依据 idea_generation.py、src/idea_forge/、ar-runtime/scripts/ar-workflow-engine.py；知识库清单用 python3 src/idea_forge/b_library.py 现查。</text>
+</svg>

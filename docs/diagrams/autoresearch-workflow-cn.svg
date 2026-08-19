@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">AutoResearch workflow</title>
+  <desc id="desc">Research signals or an existing idea move through planning, coding, experiments, analysis, critique, and iteration to produce paper-ready evidence.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#47C9E7"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="520" fill="#07101F"/>
+
+  <g fill="none" stroke="#16334B" stroke-width="1">
+    <path d="M28 84 L118 34 L198 76 L278 28 L350 70"/>
+    <path d="M858 64 L934 26 L1006 82 L1082 40 L1172 92"/>
+    <path d="M18 458 L90 410 L172 464 L244 420"/>
+    <path d="M920 454 L994 410 L1070 462 L1174 404"/>
+  </g>
+  <g fill="#47C9E7" opacity="0.48">
+    <circle cx="28" cy="84" r="3"/><circle cx="118" cy="34" r="3"/><circle cx="198" cy="76" r="3"/>
+    <circle cx="278" cy="28" r="3"/><circle cx="350" cy="70" r="3"/><circle cx="858" cy="64" r="3"/>
+    <circle cx="934" cy="26" r="3"/><circle cx="1006" cy="82" r="3"/><circle cx="1082" cy="40" r="3"/>
+    <circle cx="1172" cy="92" r="3"/><circle cx="18" cy="458" r="3"/><circle cx="90" cy="410" r="3"/>
+    <circle cx="172" cy="464" r="3"/><circle cx="244" cy="420" r="3"/><circle cx="920" cy="454" r="3"/>
+    <circle cx="994" cy="410" r="3"/><circle cx="1070" cy="462" r="3"/><circle cx="1174" cy="404" r="3"/>
+  </g>
+
+  <text x="60" y="55" fill="#47C9E7" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700">EVOMAP / OPEN SOURCE</text>
+  <text x="60" y="140" fill="#F7FAFC" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700">AutoResearch</text>
+  <text x="60" y="188" fill="#D7E3ED" font-family="Arial, Helvetica, sans-serif" font-size="27">From Idea to Paper-Ready Evidence</text>
+  <text x="60" y="226" fill="#47C9E7" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600">Insight In, Hallucination Out.</text>
+
+  <g stroke="#47C9E7" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <path d="M210 342 H242"/><path d="M392 342 H424"/><path d="M574 342 H606"/>
+    <path d="M756 342 H788"/><path d="M938 342 H970"/>
+  </g>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <g transform="translate(60 302)">
+      <rect width="150" height="80" rx="8" fill="#0B192B" stroke="#2A5874"/>
+      <circle cx="22" cy="22" r="6" fill="#47C9E7"/>
+      <text x="36" y="27" fill="#F7FAFC" font-size="14" font-weight="700">SIGNALS / IDEA</text>
+      <text x="16" y="58" fill="#8FA8BA" font-size="12">研究信号 / 自有 Idea</text>
+    </g>
+    <g transform="translate(242 302)">
+      <rect width="150" height="80" rx="8" fill="#0B192B" stroke="#2A5874"/>
+      <text x="18" y="31" fill="#F7FAFC" font-size="15" font-weight="700">PLAN</text>
+      <text x="18" y="58" fill="#8FA8BA" font-size="12">假设、指标与资源</text>
+    </g>
+    <g transform="translate(424 302)">
+      <rect width="150" height="80" rx="8" fill="#0B192B" stroke="#2A5874"/>
+      <text x="18" y="31" fill="#F7FAFC" font-size="15" font-weight="700">CODE</text>
+      <text x="18" y="58" fill="#8FA8BA" font-size="12">实现与独立审查</text>
+    </g>
+    <g transform="translate(606 302)">
+      <rect width="150" height="80" rx="8" fill="#0B192B" stroke="#2A5874"/>
+      <text x="18" y="31" fill="#F7FAFC" font-size="15" font-weight="700">EXPERIMENT</text>
+      <text x="18" y="58" fill="#8FA8BA" font-size="12">预实验与正式实验</text>
+    </g>
+    <g transform="translate(788 302)">
+      <rect width="150" height="80" rx="8" fill="#0B192B" stroke="#2A5874"/>
+      <text x="18" y="31" fill="#F7FAFC" font-size="15" font-weight="700">ANALYZE</text>
+      <text x="18" y="58" fill="#8FA8BA" font-size="12">指标、日志与发现</text>
+    </g>
+    <g transform="translate(970 302)">
+      <rect width="170" height="80" rx="8" fill="#0B192B" stroke="#47C9E7"/>
+      <text x="18" y="31" fill="#F7FAFC" font-size="15" font-weight="700">CRITIQUE / ITERATE</text>
+      <text x="18" y="58" fill="#8FA8BA" font-size="12">质疑、盲审与下一轮</text>
+    </g>
+  </g>
+
+  <text x="60" y="438" fill="#D7E3ED" font-family="Arial, Helvetica, sans-serif" font-size="15">Stateful · Multi-model · Evidence-linked · Recoverable</text>
+  <text x="1140" y="487" fill="#648096" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="end">依据 README.md、src/idea_forge/ 与 ar-runtime/</text>
+</svg>

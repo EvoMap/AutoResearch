@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="540" viewBox="0 0 1200 540" role="img" aria-labelledby="title desc">
+  <title id="title">Idea provenance from Forge output to project dashboard</title>
+  <desc id="desc">A selected Idea Forge plan or a hand-written idea is validated, materialized into an immutable project input, and linked to a knowledge document through the safe B library resolver.</desc>
+  <defs>
+    <style>
+      text { font-family: Inter, Arial, sans-serif; fill: #172033; letter-spacing: 0; }
+      .label { font-size: 15px; font-weight: 700; }
+      .detail { font-size: 12px; fill: #4c5870; }
+      .box { stroke: #34425f; stroke-width: 1.5; rx: 7; }
+      .source { fill: #edf4ff; }
+      .contract { fill: #e9f8f1; }
+      .project { fill: #fff5d9; }
+      .view { fill: #f7efff; }
+      .arrow { fill: none; stroke: #53627f; stroke-width: 2; marker-end: url(#arrow); }
+      .guard { font-size: 11px; font-weight: 700; fill: #a13b3b; }
+    </style>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#53627f"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="540" fill="#fbfcfe"/>
+
+  <rect class="box source" x="45" y="75" width="220" height="115"/>
+  <text class="label" x="155" y="108" text-anchor="middle">Idea Forge JSON</text>
+  <text class="detail" x="155" y="135" text-anchor="middle">results[n].results[m]</text>
+  <text class="detail" x="155" y="157" text-anchor="middle">b_id + idea_text + plan</text>
+
+  <rect class="box source" x="45" y="325" width="220" height="115"/>
+  <text class="label" x="155" y="358" text-anchor="middle">Hand-written idea</text>
+  <text class="detail" x="155" y="385" text-anchor="middle">plain text, or optional</text>
+  <text class="detail" x="155" y="407" text-anchor="middle">JSON provenance header</text>
+
+  <rect class="box contract" x="355" y="75" width="240" height="115"/>
+  <text class="label" x="475" y="108" text-anchor="middle">export</text>
+  <text class="detail" x="475" y="135" text-anchor="middle">select explicit seed and plan</text>
+  <text class="detail" x="475" y="157" text-anchor="middle">record Forge SHA256 + b_id</text>
+
+  <rect class="box contract" x="355" y="325" width="240" height="115"/>
+  <text class="label" x="475" y="358" text-anchor="middle">inspect / prepare</text>
+  <text class="detail" x="475" y="385" text-anchor="middle">validate UTF-8, JSON and b_id</text>
+  <text class="detail" x="475" y="407" text-anchor="middle">refuse project input drift</text>
+
+  <rect class="box project" x="680" y="175" width="235" height="190"/>
+  <text class="label" x="797" y="208" text-anchor="middle">Project input</text>
+  <text class="detail" x="797" y="240" text-anchor="middle">idea.md</text>
+  <text class="detail" x="797" y="264" text-anchor="middle">idea_provenance.json</text>
+  <text class="detail" x="797" y="288" text-anchor="middle">single machine-owned binding</text>
+  <text class="guard" x="797" y="328" text-anchor="middle">SHA mismatch or b_id drift: stop</text>
+
+  <rect class="box view" x="980" y="75" width="175" height="115"/>
+  <text class="label" x="1067" y="108" text-anchor="middle">Project dashboard</text>
+  <text class="detail" x="1067" y="135" text-anchor="middle">renders the bound</text>
+  <text class="detail" x="1067" y="157" text-anchor="middle">knowledge domain</text>
+
+  <rect class="box contract" x="980" y="325" width="175" height="115"/>
+  <text class="label" x="1067" y="358" text-anchor="middle">B library resolver</text>
+  <text class="detail" x="1067" y="385" text-anchor="middle">knowledge_path()</text>
+  <text class="guard" x="1067" y="413" text-anchor="middle">outside symlink: stop</text>
+
+  <path class="arrow" d="M265 132 H355"/>
+  <path class="arrow" d="M475 190 V250 H355 V325"/>
+  <path class="arrow" d="M265 382 H355"/>
+  <path class="arrow" d="M595 382 H640 V270 H680"/>
+  <path class="arrow" d="M915 230 H945 V132 H980"/>
+  <path class="arrow" d="M1067 190 V325"/>
+  <path class="arrow" d="M980 382 H945 V310 H915"/>
+
+  <text class="detail" x="475" y="270" text-anchor="middle">structured idea file</text>
+  <text class="detail" x="947" y="293" text-anchor="end">b_id</text>
+
+  <text x="45" y="497" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif" font-size="12" fill="#6b7280">取自 src/idea_provenance.py 的 inspect / prepare / export，以及 src/idea_forge/b_library.py 的 knowledge_path()。</text>
+</svg>

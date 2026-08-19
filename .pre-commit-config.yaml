@@ -1,0 +1,60 @@
+# 本地提交前跑的快速门禁。这里没装时，问题要等推上 CI 才知道。
+#
+# commit hook 只放快速、只读的检查。secret_scan 放 pre-push，全量测试留给 bringup 和 CI；
+# 把慢检查塞进每次 commit，最后只会教人使用 `--no-verify`。
+#
+# 装一次（git 无法用提交强制这一步，新 clone 都要跑）：
+#     pip install pre-commit && pre-commit install && pre-commit install --hook-type pre-push
+#
+# 仓内脚本经 `scripts/hook_python.sh` 找解释器，不写死路径：它们 import httpx 等仓的依赖，
+# 系统 python 通常没有；而写死 `.venv/bin/python` 会让 linked worktree 里的 hook 在检查
+# 任何代码之前就失败——git 不复制 ignored 目录，那个树里没有 .venv（#119）。
+repos:
+  - repo: local
+    hooks:
+      - id: model-references
+        name: every model and env a call site names is declared
+        entry: scripts/hook_python.sh scripts/check_model_references.py
+        language: system
+        pass_filenames: false
+        # 调用点和配置任一侧变了都要重跑：门比的是两者是否还对得上。
+        files: ^(src/|scripts/|ar-runtime/scripts/|config/providers).*\.(py|ts|json)$
+
+      - id: tracked-projection
+        name: the tracked projection matches the config
+        entry: scripts/hook_python.sh scripts/render_env.py --check
+        language: system
+        pass_filenames: false
+        files: ^(config/providers|scripts/render_env|ar-runtime/\.claude/settings\.local\.example).*$
+
+      - id: public-knowledge
+        name: public knowledge matches its reviewed manifest
+        entry: scripts/hook_python.sh scripts/check_public_knowledge.py
+        language: system
+        pass_filenames: false
+        files: ^(knowledge_base/|scripts/check_public_knowledge\.py$)
+
+      - id: secret-scan
+        name: no unreviewed secret pattern
+        entry: scripts/hook_python.sh scripts/secret_scan.py
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+  # ruff 用上游自己的 hook，版本与 CI 里那句 `pip install ruff==...` 对齐。两处钉同一个
+  # 版本会漂，所以有一条测试对账（tests/test_precommit_matches_ci.py）。
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.14
+    hooks:
+      - id: ruff-check
+
+  # 只放检查型，不放改写型。`end-of-file-fixer` / `trailing-whitespace` 试过：一次改了
+  # 20 多个 knowledge_base 文件和一张 SVG，跟这次提交毫无关系。改写型 hook 还会让「提交
+  # 的状态」和「被检查的状态」分岔——仓里已经吃过一次这个亏（`bun run check` 触发
+  # precheck，里面的 check:fix 改了 15 个文件，CI 绿的是改完之后）。
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-yaml

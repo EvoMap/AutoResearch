@@ -1,0 +1,33 @@
+# Python lint for this repository's own code.
+#
+# CONTRIBUTING asks contributors to run offline checks before sending a PR.
+# The Python side had no lint configuration at all -- so 63
+# findings accumulated, including two bare `except:` clauses that swallow every
+# error including KeyboardInterrupt.
+#
+# What is excluded is other people's code, not whole directories that happen to
+# contain some. Each entry below needs a recorded reason in
+# tests/test_python_lint_reaches_our_code.py, which compares this list against
+# what ruff actually visits.
+
+line-length = 120
+target-version = "py310"
+
+exclude = [
+    "data",
+    ".venv",
+    ".conda-env",
+]
+
+[lint]
+# pycodestyle errors and pyflakes. Deliberately not the full ruff catalogue: this
+# is a gate that has to pass from day one, and a gate nobody can make green gets
+# switched off. Widen it once this stays green.
+select = ["E", "F", "W"]
+
+[lint.per-file-ignores]
+# Collector modules import their entry point for the pipeline to pick up.
+"src/collectors/__init__.py" = ["F401"]
+# The workflow engine keeps its current line layout; style-only line-length findings are suppressed.
+"ar-runtime/scripts/ar-workflow-engine.py" = ["E501"]
+"ar-runtime/scripts/tests/demo_selforg_pool.py" = ["E741"]

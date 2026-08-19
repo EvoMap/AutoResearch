@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use AutoResearch, please cite the report below."
+type: software
+title: "AutoResearch"
+authors:
+  - family-names: "Ren"
+    given-names: "Yiming"
+  - family-names: "Liu"
+    given-names: "Xiang"
+  - family-names: "Sun"
+    given-names: "Qumeng"
+  - family-names: "Zhang"
+    given-names: "Xiao"
+  - family-names: "Li"
+    given-names: "Jiahao"
+  - family-names: "Zhang"
+    given-names: "Haoyang"
+  - family-names: "Wang"
+    given-names: "Junjie"
+license: Apache-2.0
+repository-code: https://github.com/EvoMap/AutoResearch
+url: https://github.com/EvoMap/AutoResearch
+preferred-citation:
+  type: article
+  title: "AutoResearch: Insight In, Hallucination Out"
+  authors:
+    - family-names: "Ren"
+      given-names: "Yiming"
+    - family-names: "Liu"
+      given-names: "Xiang"
+    - family-names: "Sun"
+      given-names: "Qumeng"
+    - family-names: "Zhang"
+      given-names: "Xiao"
+    - family-names: "Li"
+      given-names: "Jiahao"
+    - family-names: "Zhang"
+      given-names: "Haoyang"
+    - family-names: "Wang"
+      given-names: "Junjie"
+  journal: "arXiv"
+  year: 2026
+  url: https://arxiv.org/abs/2608.17906

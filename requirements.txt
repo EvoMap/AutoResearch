@@ -1,0 +1,10 @@
+# Minimal dependencies for the AutoResearch Python pipeline.
+# Optional GPU / Claude Code / GPT Researcher dependencies are managed separately.
+
+httpx>=0.27
+beautifulsoup4>=4.12
+feedparser>=6.0
+arxiv>=2.1
+openreview-py>=1.44
+pytest>=8.0
+ruff>=0.15
