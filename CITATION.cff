@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use AutoResearch, please cite the report below."
+type: software
+title: "AutoResearch"
+authors:
+  - name: "Infinite Evolution Lab, EvoMap"
+license: Apache-2.0
+repository-code: https://github.com/EvoMap/AutoResearch
+url: https://github.com/EvoMap/AutoResearch
+preferred-citation:
+  type: article
+  title: "AutoResearch: Insight In, Hallucination Out"
+  authors:
+    - name: "Infinite Evolution Lab, EvoMap"
+  journal: "arXiv"
+  year: 2026
+  url: https://arxiv.org/abs/2608.17906

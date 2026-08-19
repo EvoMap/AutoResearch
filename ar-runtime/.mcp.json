@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "ar-gemini-review": {
+      "command": "bun",
+      "args": [
+        "run",
+        "./scripts/ar-gemini-review-mcp.ts"
+      ]
+    },
+    "ar-external-critic": {
+      "command": "bun",
+      "args": [
+        "run",
+        "./scripts/ar-external-critic-mcp.ts"
+      ]
+    }
+  }
+}

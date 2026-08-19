@@ -1,0 +1,390 @@
+{
+  "_note": [
+    "Declares what each role needs, which providers can serve it, and how each endpoint",
+    "expects requests to be shaped. Copy to providers.local.json and edit; secrets stay in",
+    "environment variables and are referenced here by variable name only.",
+    "",
+    "This is the single runtime configuration read by preflight and every model caller.",
+    "Role model lists are ordered: panel roles use all candidates, other roles fall back",
+    "from left to right. Names are user-defined aliases and do not imply a vendor.",
+    "Every endpoint defaults to 3 total attempts for transient network, 429, and 5xx failures.",
+    "Set retry_attempts or retry_delay_seconds on one endpoint only when it needs a different policy.",
+    "request_defaults applies to every business model call. A role may override it with request.max_tokens."
+  ],
+  "endpoints": {
+    "anthropic-compatible": {
+      "base_url_env": "ANTHROPIC_BASE_URL",
+      "credential_env": [
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_AUTH_TOKEN"
+      ],
+      "dialect": "anthropic_messages",
+      "transport": "httpx",
+      "url_env_fallback": []
+    },
+    "gemini-gateway": {
+      "base_url_env": "GEMINI_BASE_URL",
+      "credential_env": [
+        "GEMINI_API_KEY"
+      ],
+      "dialect": "openai_chat",
+      "proxy_contract": "standard-env",
+      "transport": "httpx",
+      "url_env_fallback": []
+    },
+    "generativelanguage-googleapis-com": {
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "credential_env": [
+        "GEMINI_API_KEY"
+      ],
+      "dialect": "openai_chat",
+      "proxy_contract": "autoresearch",
+      "transport": "httpx",
+      "url_env_fallback": []
+    },
+    "gpt-critic": {
+      "base_url_env": "GPT_CRITIC_BASE_URL",
+      "credential_env": [
+        "GPT_CRITIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "dialect": "openai_chat",
+      "transport": "httpx",
+      "url_env_fallback": [
+        "OPENAI_BASE_URL",
+        "OPENAI_API_BASE"
+      ]
+    },
+    "openai-compatible": {
+      "base_url_env": "OPENAI_BASE_URL",
+      "credential_env": [
+        "OPENAI_API_KEY"
+      ],
+      "dialect": "openai_chat",
+      "transport": "httpx",
+      "url_env_fallback": [
+        "OPENAI_API_BASE"
+      ]
+    }
+  },
+  "execution": {
+    "max_concurrency": 3
+  },
+  "idea_forge": {
+    "_b_directions_note": "Empty means use the built-in B library. Values are knowledge_base file stems.",
+    "b_directions": []
+  },
+  "models": {
+    "claude-opus": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "anthropic-compatible",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens"
+          },
+          "wire_name": "claude-opus-4-8"
+        }
+      ]
+    },
+    "deepseek-v4-pro": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "anthropic-compatible",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens"
+          },
+          "wire_name": "deepseek-v4-pro"
+        }
+      ]
+    },
+    "gemini-3.1-flash-lite": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "generativelanguage-googleapis-com",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "append"
+          },
+          "wire_name": "gemini-3.1-flash-lite"
+        }
+      ]
+    },
+    "gemini-3.1-pro": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "generativelanguage-googleapis-com",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "append"
+          },
+          "wire_name": "gemini-3.1-pro"
+        }
+      ]
+    },
+    "gemini-3.5-flash": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "gemini-gateway",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "mcp"
+          },
+          "wire_name": "gemini-3.5-flash"
+        }
+      ]
+    },
+    "gemini-pro": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "generativelanguage-googleapis-com",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "append"
+          },
+          "wire_name": "gemini-3.1-pro"
+        }
+      ]
+    },
+    "gpt-5.5": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "openai-compatible",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens"
+          },
+          "wire_name": "gpt-5.5"
+        }
+      ]
+    },
+    "gpt-critic-endpoint": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "gpt-critic",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "mcp"
+          },
+          "wire_name": "gpt-5-mini",
+          "wire_name_env": "GPT_CRITIC_MODEL",
+          "wire_name_env_fallback": [
+            "OPENAI_MODEL"
+          ]
+        }
+      ]
+    },
+    "oai-large": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "openai-compatible",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "append"
+          },
+          "wire_name": "gpt-5-pro",
+          "wire_name_env": "OPENAI_LARGE_MODEL",
+          "wire_name_env_fallback": [
+            "OPENAI_MODEL"
+          ]
+        }
+      ]
+    },
+    "oai-mcp-reviewer": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "openai-compatible",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "mcp"
+          },
+          "wire_name": "gpt-5-mini",
+          "wire_name_env": "GEMINI_REVIEW_MODEL",
+          "wire_name_env_fallback": [
+            "OPENAI_MODEL"
+          ]
+        }
+      ]
+    },
+    "oai-mid": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "openai-compatible",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "append"
+          },
+          "wire_name": "gpt-5",
+          "wire_name_env": "OPENAI_MID_MODEL",
+          "wire_name_env_fallback": [
+            "OPENAI_MODEL"
+          ]
+        }
+      ]
+    },
+    "oai-small": {
+      "capabilities": {},
+      "routes": [
+        {
+          "endpoint": "openai-compatible",
+          "params": {
+            "supports_temperature": true,
+            "token_param": "max_tokens",
+            "url_style": "append"
+          },
+          "wire_name": "gpt-5-mini",
+          "wire_name_env": "OPENAI_SMALL_MODEL",
+          "wire_name_env_fallback": [
+            "OPENAI_MODEL"
+          ]
+        }
+      ]
+    }
+  },
+  "request_defaults": {
+    "max_tokens": 8192
+  },
+  "resource_profile": {},
+  "roles": {
+    "agent": {
+      "_needs": "coordinator / planner / coder / runner \u7684\u4e3b\u5faa\u73af\uff0c\u8981\u5de5\u5177\u8c03\u7528\u3002\u4e0d\u652f\u6301 function calling \u7684\u6a21\u578b\u5728\u8fd9\u91cc\u8dd1\u4e0d\u4e86\u3002",
+      "_purpose": "Main loop for coordinator, planner, coder and runner",
+      "_requires_api": [
+        "anthropic_messages"
+      ],
+      "_used_by": "ar-runtime/.claude/settings.local.json:ANTHROPIC_MODEL",
+      "models": [
+        "deepseek-v4-pro",
+        "claude-opus"
+      ]
+    },
+    "code_reviewer": {
+      "_needs": "\u8bfb\u4ee3\u7801\u7ed9\u7ed3\u6784\u5316\u8bc4\u5ba1\uff0c\u8f93\u51fa\u53ef\u80fd\u5230 8K token\u3002\u8981\u80fd\u8bfb\u957f\u4e0a\u4e0b\u6587\u3002",
+      "_purpose": "Plan and code gate review",
+      "_used_by": "ar-runtime/scripts/ar-gemini-review-mcp.ts via scripts/call_role.py",
+      "models": [
+        "gemini-3.5-flash",
+        "oai-mcp-reviewer"
+      ]
+    },
+    "consensus_checker": {
+      "_purpose": "\u4ea4\u53c9\u9a8c\u8bc1\uff1a\u5224\u4e24\u4e2a\u6a21\u578b\u7684\u7ed3\u8bba\u662f\u5426\u771f\u7684\u4e00\u81f4\uff0c\u4e0d\u662f\u590d\u8ff0",
+      "models": [
+        "gemini-3.1-pro",
+        "gpt-5.5",
+        "oai-mid"
+      ]
+    },
+    "critic": {
+      "_needs": "\u6700\u7ec8\u8bc4\u5ba1\u548c\u76f2\u5ba1\uff0c\u8981\u80fd\u8bf4\u300c\u4e0d\u300d\u3002\u592a\u987a\u4ece\u7684\u6a21\u578b\u4f1a\u8ba9\u8fd9\u4e00\u5173\u5931\u53bb\u610f\u4e49\u3002",
+      "_purpose": "Final critic and blind review",
+      "_used_by": "ar-runtime/scripts/ar-external-critic-mcp.ts via scripts/call_role.py",
+      "models": [
+        "gemini-3.5-flash",
+        "gpt-critic-endpoint",
+        "oai-mcp-reviewer"
+      ]
+    },
+    "critic_secondary": {
+      "_independent_of": "critic",
+      "_needs": "\u53ef\u9009\u7684\u7b2c\u4e8c\u4e2a\u72ec\u7acb\u8bc4\u5ba1\u3002\u542f\u7528\u540e\u6a21\u578b\u5fc5\u987b\u4e0e critic \u5b9e\u9645\u4f7f\u7528\u7684\u6a21\u578b\u4e0d\u540c\uff1b\u53ef\u4ee5\u5171\u7528 endpoint\uff0c\u4e0d\u8981\u6c42\u6765\u81ea\u4e0d\u540c\u5382\u5546\u3002",
+      "_optional": true,
+      "_purpose": "Optional independent second critic",
+      "_used_by": "ar-runtime/scripts/ar-external-critic-mcp.ts",
+      "models": [
+        "oai-mid",
+        "gpt-critic-endpoint",
+        "gemini-pro",
+        "oai-large"
+      ]
+    },
+    "freshness_refresher": {
+      "_needs": "\u628a idea \u91cc\u8fc7\u65f6\u7684\u6a21\u578b\u548c\u6570\u636e\u96c6\u6362\u6210\u5f53\u524d\u7684\uff0c\u8981\u77e5\u9053\u8fd1\u4e00\u4e24\u5e74\u7684 SOTA\u3002\u77e5\u8bc6\u9648\u65e7\u7684\u6a21\u578b\u5728\u8fd9\u4e00\u73af\u4f1a\u5e2e\u5012\u5fd9\u3002",
+      "_purpose": "Rewrites an idea against newer baselines",
+      "_used_by": "src/idea_forge/freshness.py:refresh_idea_freshness",
+      "models": [
+        "claude-opus",
+        "gpt-5.5",
+        "oai-mid"
+      ]
+    },
+    "ideator": {
+      "_all_candidates_used": true,
+      "_min_available": 3,
+      "_min_available_reason": "Idea generation and cross-review require three independent model identities; aliases or endpoints serving the same model count once",
+      "_needs": "\u8de8\u9886\u57df\u505a\u673a\u5236\u6620\u5c04\uff0c\u6700\u5403\u80fd\u529b\u7684\u4e00\u73af\u3002\u5fc5\u987b\u6709 \u22653 \u4e2a\u4e0d\u540c\u6a21\u578b\u72ec\u7acb\u6784\u601d\u5e76\u4ea4\u53c9\u8bc4\u5ba1\uff1b\u540c\u4e00\u6a21\u578b\u6362\u522b\u540d\u6216 endpoint \u4ecd\u53ea\u7b97\u4e00\u4e2a\u3002",
+      "_purpose": "Independent idea generation and cross-review. All candidates run, they do not fall back to each other",
+      "_used_by": "src/idea_forge/forge.py:IDEA_MODELS",
+      "models": [
+        "gemini-pro",
+        "gpt-5.5",
+        "claude-opus",
+        "oai-mid",
+        "oai-large"
+      ]
+    },
+    "judge": {
+      "_needs": "\u8bfb\u5b8c\u6574\u6458\u8981\u7ed9\u5206\u6863\u5224\u5b9a\uff0c\u8981\u6309\u683c\u5f0f\u8f93\u51fa\u300c\u6700\u7ec8\u5224\u5b9a: X\u300d\u3002\u5224\u5b9a\u8bfb\u4e0d\u51c6\u4f1a\u6574\u6761\u9519\uff0c\u6240\u4ee5\u8981\u80fd\u7a33\u5b9a\u5b88\u683c\u5f0f\uff1b\u4e0a\u4e0b\u6587 8K \u591f\u7528\u3002",
+      "_purpose": "Deeper per-candidate judgement, and the consensus check",
+      "_used_by": "src/pipeline_v4.py:final_pro_judgment and src/idea_forge/consensus_check.py -> llm_client.call_pro",
+      "models": [
+        "gemini-3.1-pro",
+        "gpt-5.5",
+        "oai-mid"
+      ]
+    },
+    "planner": {
+      "_needs": "\u628a idea \u5199\u6210\u53ef\u6267\u884c\u5b9e\u9a8c\u8ba1\u5212\uff0c\u8f93\u51fa 2000+ token \u7684\u957f\u6587\u3002\u8981\u80fd\u5199\u957f\u3001\u5199\u5177\u4f53\u3002",
+      "_purpose": "Turns a validated idea into an experiment plan",
+      "_used_by": "src/idea_forge/forge.py:PLAN_MODEL",
+      "models": [
+        "gpt-5.5",
+        "gemini-pro",
+        "claude-opus",
+        "oai-mid"
+      ]
+    },
+    "run_monitor": {
+      "_needs": "\u628a\u8dd1\u6279\u65e5\u5fd7\u538b\u6210\u8fdb\u5ea6\u6458\u8981\uff0c\u80fd\u529b\u8981\u6c42\u4f4e\uff0c\u4f46\u8981\u80fd\u5403\u957f\u8f93\u5165\u3002",
+      "_note": "\u6458\u8981\u8d70 call_role(\"run_monitor\")\uff0c\u4e0e\u6d41\u6c34\u7ebf\u540c\u4e00\u5957\u89e3\u6790\u3002\u62ff\u4e0d\u5230\u6458\u8981\u65f6 monitor \u7167\u5e38\u62a5\u5fc3\u8df3\u3001idle\u3001stale\uff0c\u53ea\u662f notifications.log \u5c11\u4e00\u6bb5\u8bdd\u3002",
+      "_optional": true,
+      "_purpose": "Summarizes a running experiment's log into progress notes",
+      "_used_by": "ar-runtime/scripts/ar-gemini-monitor.py\uff0c\u7531 ar-coordinator \u540e\u53f0\u542f\u52a8",
+      "models": [
+        "oai-small",
+        "gpt-5.5"
+      ]
+    },
+    "screener": {
+      "_needs": "\u53ea\u505a\u4e8c\u5206\u5224\u65ad\uff0c\u8f93\u51fa\u4e00\u4e2a\u8bcd\u3002\u91cf\u5927\uff0c\u6311\u4fbf\u5b9c\u5feb\u7684\uff1b\u80fd\u529b\u8981\u6c42\u6700\u4f4e\uff0c\u5c0f\u6a21\u578b\u8db3\u591f\u3002",
+      "_purpose": "Cheap yes/no filtering over collected posts",
+      "_used_by": "src/pipeline_v4.py:llm_insight_filter -> llm_client.call_flash",
+      "models": [
+        "gemini-3.1-flash-lite",
+        "gpt-5.5",
+        "oai-small"
+      ]
+    }
+  },
+  "version": 2
+}

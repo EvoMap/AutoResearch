@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="820" viewBox="0 0 1300 820" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif">
+<defs>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#64748b"/></marker>
+  <marker id="greenArrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#15803d"/></marker>
+</defs>
+<rect width="1300" height="820" fill="#ffffff"/>
+
+<text x="40" y="44" font-size="21" fill="#111827" font-weight="600">AutoResearch provider 配置：一份角色路由，四类消费者</text>
+<text x="40" y="68" font-size="12.5" fill="#4b5563">JSON 只声明端点、模型和角色；凭据留在环境变量。Python 与官方 Claude Code 各读适合自己的投影。</text>
+
+<text x="40" y="106" font-size="14" fill="#111827" font-weight="600">操作者维护的输入</text>
+
+<rect x="40" y="120" width="275" height="110" rx="6" fill="#eff6ff" stroke="#93c5fd"/>
+<text x="56" y="146" font-size="13" fill="#1e3a8a" font-weight="600">config/providers.example.json</text>
+<text x="56" y="168" font-size="11" fill="#4b5563">tracked 默认值与 schema 样板</text>
+<text x="56" y="190" font-size="11" fill="#4b5563">· endpoints → models → roles</text>
+<text x="56" y="208" font-size="11" fill="#4b5563">· local 文件缺失时直接生效</text>
+
+<rect x="335" y="120" width="275" height="110" rx="6" fill="#f0fdf4" stroke="#86efac"/>
+<text x="351" y="146" font-size="13" fill="#166534" font-weight="600">config/providers.local.json</text>
+<text x="351" y="168" font-size="11" fill="#4b5563">本机可选覆盖，git 忽略</text>
+<text x="351" y="190" font-size="11" fill="#4b5563">· 可换端点、模型、候选顺序</text>
+<text x="351" y="208" font-size="11" fill="#4b5563">· 与 tracked 默认值结构化合并</text>
+
+<rect x="630" y="120" width="275" height="110" rx="6" fill="#fff7ed" stroke="#fdba74"/>
+<text x="646" y="146" font-size="13" fill="#9a3412" font-weight="600">.env / shell environment</text>
+<text x="646" y="168" font-size="11" fill="#4b5563">JSON 点名变量，真实值只放这里</text>
+<text x="646" y="190" font-size="11" fill="#4b5563">· URL、key、token 不进 git</text>
+<text x="646" y="208" font-size="11" fill="#4b5563">· MCP 子进程继承同一环境</text>
+
+<rect x="925" y="120" width="335" height="110" rx="6" fill="#faf5ff" stroke="#c4b5fd"/>
+<text x="941" y="146" font-size="13" fill="#5b21b6" font-weight="600">AR_MODEL_&lt;ROLE&gt;</text>
+<text x="941" y="168" font-size="11" fill="#4b5563">一次运行的临时角色覆盖</text>
+<text x="941" y="190" font-size="11" fill="#4b5563">· 值仍须是配置中存在的模型代称</text>
+<text x="941" y="208" font-size="11" fill="#4b5563">· 日常修改回到 roles 候选列表</text>
+
+<rect x="390" y="278" width="520" height="104" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+<text x="650" y="306" font-size="15" fill="#111827" font-weight="600" text-anchor="middle">src/providers.py + src/roles.py</text>
+<text x="650" y="330" font-size="11.5" fill="#4b5563" text-anchor="middle">load_effective_config 合并 tracked/local，解析 endpoint、model、role 与环境变量</text>
+<text x="650" y="352" font-size="11.5" fill="#4b5563" text-anchor="middle">role_candidates 统一候选顺序；JSON 不保存任何凭据值</text>
+
+<path d="M178,230 L470,278" stroke="#64748b" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M472,230 L555,278" stroke="#15803d" stroke-width="1.8" fill="none" marker-end="url(#greenArrow)"/>
+<path d="M768,230 L745,278" stroke="#c2410c" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M1092,230 L830,278" stroke="#7c3aed" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+
+<text x="40" y="426" font-size="14" fill="#111827" font-weight="600">真正发请求或生成运行输入的消费者</text>
+
+<rect x="40" y="448" width="280" height="126" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+<text x="56" y="474" font-size="13" fill="#111827" font-weight="600">Python idea 流水线</text>
+<text x="56" y="496" font-size="11" fill="#4b5563">src/llm_client.py</text>
+<text x="56" y="518" font-size="11" fill="#4b5563">· daily_full / pipeline_v4 / Idea Forge</text>
+<text x="56" y="538" font-size="11" fill="#4b5563">· build → send → read 共用 provider 方言</text>
+<text x="56" y="558" font-size="11" fill="#4b5563">· 按角色候选自动回落</text>
+
+<rect x="345" y="448" width="280" height="126" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+<text x="361" y="474" font-size="13" fill="#111827" font-weight="600">preflight 与负控验证</text>
+<text x="361" y="496" font-size="11" fill="#4b5563">scripts/preflight.py / verify_provider.py</text>
+<text x="361" y="518" font-size="11" fill="#4b5563">· 离线列缺项，--live 发最小请求</text>
+<text x="361" y="538" font-size="11" fill="#4b5563">· --tools 验两轮工具调用</text>
+<text x="361" y="558" font-size="11" fill="#4b5563">· 假模型必须被上游拒绝</text>
+
+<rect x="650" y="448" width="280" height="126" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+<text x="666" y="474" font-size="13" fill="#111827" font-weight="600">review / critic / monitor</text>
+<text x="666" y="496" font-size="11" fill="#4b5563">scripts/call_role.py 统一桥接</text>
+<text x="666" y="518" font-size="11" fill="#4b5563">· Bun MCP 经 ar-role-client.ts 调用</text>
+<text x="666" y="538" font-size="11" fill="#4b5563">· reviewer、critic 读各自 role</text>
+<text x="666" y="558" font-size="11" fill="#4b5563">· monitor 调 run_monitor role</text>
+
+<rect x="955" y="448" width="305" height="126" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+<text x="971" y="474" font-size="13" fill="#111827" font-weight="600">官方 Claude Code 主循环</text>
+<text x="971" y="496" font-size="11" fill="#4b5563">scripts/render_env.py</text>
+<text x="971" y="518" font-size="11" fill="#4b5563">· 只投影 3 个 ANTHROPIC_* 键</text>
+<text x="971" y="538" font-size="11" fill="#4b5563">· 原子写 settings.local.json（0600）</text>
+<text x="971" y="558" font-size="11" fill="#4b5563">· claude CLI 加载 ar-runtime agents / MCP</text>
+
+<path d="M500,382 L180,448" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+<path d="M585,382 L485,448" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+<path d="M715,382 L790,448" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+<path d="M800,382 L1108,448" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+<rect x="40" y="620" width="1220" height="118" rx="6" fill="#f0fdf4" stroke="#86efac"/>
+<text x="56" y="648" font-size="13" fill="#166534" font-weight="600">仓内守卫</text>
+<text x="56" y="674" font-size="11" fill="#4b5563">· check_model_references.py：调用点点名的 model / env 必须由统一配置覆盖，豁免只减不增</text>
+<text x="56" y="696" font-size="11" fill="#4b5563">· render_env.py --check：tracked 投影必须与 providers.example.json 一致；本机投影另做新鲜度与手改冲突检查</text>
+<text x="56" y="718" font-size="11" fill="#4b5563">· ar-role-client.test.ts + ar-critic-contract.test.ts：MCP 桥接失败与盲审字段的消费合同不能漂移</text>
+
+<text x="40" y="784" font-size="10.5" fill="#94a3b8">依据 src/providers.py、src/llm_client.py、scripts/render_env.py、scripts/call_role.py 与 ar-runtime/scripts/ar-role-client.ts。</text>
+</svg>

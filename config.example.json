@@ -1,0 +1,101 @@
+{
+  "version": "open-source-template-v1",
+  "notes": [
+    "Copy this file to config.local.json or another ignored path, then fill in your own provider credentials.",
+    "Do not put real API keys, passwords, cookies, auth tokens, or service-account JSON content in files committed to Git.",
+    "The runtime can be pointed at this file with AUTORESEARCH_CONFIG=/path/to/config.local.json."
+  ],
+  "presets": {
+    "gemini-3.1-flash-lite": {
+      "provider": "google_openai_compat",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "model": "gemini-3.1-flash-lite",
+      "api_key_env": "GEMINI_API_KEY",
+      "needs_proxy": false
+    },
+    "gemini-3.1-pro": {
+      "provider": "google_openai_compat",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "model": "gemini-3.1-pro",
+      "api_key_env": "GEMINI_API_KEY",
+      "needs_proxy": false
+    },
+    "claude-opus": {
+      "provider": "anthropic_messages",
+      "base_url_env": "ANTHROPIC_BASE_URL",
+      "model": "claude-opus-4-8",
+      "auth_token_env": "ANTHROPIC_API_KEY",
+      "needs_proxy": false
+    },
+    "claude-sonnet": {
+      "provider": "anthropic_messages",
+      "base_url_env": "ANTHROPIC_BASE_URL",
+      "model": "claude-sonnet-5",
+      "auth_token_env": "ANTHROPIC_API_KEY",
+      "needs_proxy": false
+    },
+    "gpt-5.5": {
+      "provider": "openai_chat_completions",
+      "base_url_env": "OPENAI_BASE_URL",
+      "model": "gpt-5.5",
+      "api_key_env": "OPENAI_API_KEY",
+      "needs_proxy": false
+    },
+    "deepseek-chat": {
+      "provider": "openai_chat_completions",
+      "base_url": "https://api.deepseek.com/v1",
+      "model": "deepseek-chat",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "needs_proxy": false
+    },
+    "qwen-max": {
+      "provider": "openai_chat_completions",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "model": "qwen-max",
+      "api_key_env": "DASHSCOPE_API_KEY",
+      "needs_proxy": false
+    },
+    "siliconflow": {
+      "provider": "openai_chat_completions",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "replace-with-your-siliconflow-model",
+      "api_key_env": "SILICONFLOW_API_KEY",
+      "needs_proxy": false
+    }
+  },
+  "aliases": {
+    "gemini-flash": "gemini-3.1-flash-lite",
+    "gemini-pro": "gemini-3.1-pro",
+    "claude-opus": "claude-opus",
+    "claude-sonnet": "claude-sonnet",
+    "gpt-5.5": "gpt-5.5",
+    "deepseek": "deepseek-chat",
+    "qwen": "qwen-max",
+    "siliconflow": "siliconflow"
+  },
+  "resource_profile": {
+    "_note": [
+      "跑实验的机器有什么。Idea Forge 的两个提示词都读它，不再各写一份字面量。",
+      "不填就按本机探测（nvidia-smi / CPU / 内存 / 磁盘）；实验要在别的机器上跑时",
+      "必须填，否则规划会按本机的资源来做。公开模板的值均为空，不代表任何真实机器。"
+    ],
+    "gpu_count": null,
+    "gpu_model": null,
+    "vram_gb": null,
+    "cpu_cores": null,
+    "memory_gb": null,
+    "disk_gb": null,
+    "weeks": null,
+    "notes": []
+  },
+  "idea_forge": {
+    "idea_models": [
+      "gemini-pro",
+      "gpt-5.5",
+      "claude-opus"
+    ],
+    "plan_model": "gpt-5.5",
+    "b_directions": [],
+    "_b_directions_note": "留空=只跑 B 库内置的 4 个方向。填 id 列表可任选 knowledge_base/ 下的任意领域（id 就是文件名去掉 .md）。查看全部：python src/idea_forge/b_library.py"
+  }
+}

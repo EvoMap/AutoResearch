@@ -1,0 +1,18 @@
+{
+  "name": "ar-runtime",
+  "private": true,
+  "description": "AutoResearch execution workflow on official Claude Code: two MCP servers plus workflow scripts",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
+    "@types/bun": "^1.3.14",
+    "typescript": "^6.0.3"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

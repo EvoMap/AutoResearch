@@ -1,0 +1,49 @@
+name: pr title
+
+# CONTRIBUTING mandates Conventional Commits and asks for
+# small, reviewable pull requests. Both were stated and neither was enforced, so
+# six PRs went up with prose titles and one of them carried nineteen commits
+# across five unrelated concerns. A rule nothing checks is a rule that gets
+# followed until someone is in a hurry.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  conventional-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: title follows Conventional Commits
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        shell: bash
+        run: |
+          set -u
+          pattern='^(feat|fix|docs|chore|refactor|test|perf|build|ci)(\([a-z0-9-]+\))?!?: .+'
+          if [[ ! "$TITLE" =~ $pattern ]]; then
+            echo "::error::标题不符合 Conventional Commits: $TITLE"
+            echo "格式：<type>(<scope>): <描述>"
+            echo "type：feat fix docs chore refactor test perf build ci"
+            echo "例：fix(consensus): 判不了的输入不再放行"
+            exit 1
+          fi
+
+          # Not a hard gate on scope, but a visible one. A title that joins two
+          # unrelated things is usually two pull requests.
+          #
+          # Only unambiguous connectors. A bare 和 also appears inside ordinary
+          # words -- 和谐, 饱和, 调和 -- and a warning that cries wolf is one
+          # people learn to scroll past, which costs more than not having it.
+          # 以及 and a spaced "and" carry the same signal without the collisions.
+          desc="${TITLE#*: }"
+          for sep in "、" "，" "以及" " and " " & "; do
+            if [[ "$desc" == *"$sep"* ]]; then
+              echo "::warning::标题里有「$sep」，确认这是一个关注点而不是两个 PR：$desc"
+              break
+            fi
+          done
+
+          echo "ok: $TITLE"

@@ -1,0 +1,1 @@
+gpt-researcher @ git+https://github.com/assafelovic/gpt-researcher.git@92bfc0388c5f7a03b6cb34eaf6ae14298a4b458e
