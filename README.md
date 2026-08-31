@@ -73,7 +73,7 @@ Research agents can invent missing details when evidence is thin and repeatedly 
 
 ### 3.1 Clone the Repository and Check the Environment
 
-Prepare a Linux or SSH machine with Git, Python 3.10+, and `python3-venv` installed:
+Prepare a Linux machine, either local or accessible over SSH, with Git, Python 3.10+, and `python3-venv` installed:
 
 ```bash
 git clone https://github.com/EvoMap/AutoResearch.git
