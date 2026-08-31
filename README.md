@@ -81,7 +81,7 @@ cd AutoResearch
 bash scripts/bringup.sh
 ```
 
-`bringup.sh` creates `.venv`, installs Python dependencies, runs the baseline tests and secret scan, and checks the current model configuration. It does not contact model services or incur API charges.
+`scripts/bringup.sh` creates `.venv`, installs Python dependencies, runs the baseline tests and secret scan, and checks the current model configuration. It does not contact model services or incur API charges.
 
 On the first run, before API credentials are configured, a final `BLOCKED` result or nonzero exit is expected. Confirm that Python setup, dependency installation, and tests succeeded, then configure credentials in the next step.
 
