@@ -116,10 +116,10 @@ This command sends a small number of real requests. Exit code `0` means that nor
 Then choose a path:
 
 ```bash
-# Generate ideas
+# Generate ideas.
 .venv/bin/python idea_generation.py
 
-# Execute an existing idea
+# Execute an existing idea.
 # Continue with section 5, "Idea Execution"
 ```
 
