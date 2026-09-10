@@ -99,67 +99,67 @@ A single run gate approval does not mean the entire AutoResearch is finished. Af
   - `runner_rerun_next_focus`: have the runner run the next batch of experiments.
 - Even if there is no valuable change for the next round, it must still go through the external critic first; once the critic verdict is `finish_ok`, the engine will first insert a blind-review unit (memoryless blind review), and only a passing blind-review ruling allows a close.
 
-## 扇出加速:并行子代理批量（官方 Claude Code 形态，2026-08-11 改写）
+## Fan-Out Acceleration: Parallel Sub-Agent Batches (Official Claude Code Form, rewritten 2026-08-11)
 
-当一批工作**相互独立且形状相同**时（多 baseline / 多消融 / 多随机种子 / 多假设各跑 pilot / 多文件同类处理），在**同一条回复里并行发出多个 `Task(...)` 调用**一次铺开，而不是一个个串行做。官方 Claude Code 没有 `ar_swarm` 内置工具；同一消息内的多个 Task 调用天然并发,语义等价。
+When a batch of work is **mutually independent and shaped the same** (multiple baselines / multiple ablations / multiple random seeds / a pilot per hypothesis / same-kind processing across multiple files), spread it out in **one shot by issuing multiple `Task(...)` calls in parallel within the same reply**, rather than doing them one by one serially. The official Claude Code has no built-in `ar_swarm` tool; multiple Task calls within the same message are naturally concurrent and semantically equivalent.
 
-用法（同构批量,items × 模板展开）：
+Usage (isomorphic batch, items × template expansion):
 ```
-# 同一条回复里并行发出,每个 item 一个:
+# Issue in parallel within the same reply, one per item:
 Task(subagent_type="ar-coder", description="seed42",
-     prompt="用种子 seed42 跑一遍 pilot 实验并把关键指标写进 results/seed42.json。")
+     prompt="Run one pilot experiment with seed seed42 and write the key metrics into results/seed42.json.")
 Task(subagent_type="ar-coder", description="seed7",
-     prompt="用种子 seed7 跑一遍 pilot 实验并把关键指标写进 results/seed7.json。")
+     prompt="Run one pilot experiment with seed seed7 and write the key metrics into results/seed7.json.")
 Task(subagent_type="ar-coder", description="seed123",
-     prompt="用种子 seed123 跑一遍 pilot 实验并把关键指标写进 results/seed123.json。")
+     prompt="Run one pilot experiment with seed seed123 and write the key metrics into results/seed123.json.")
 ```
-- 铺开前先自查：≥2 个 item、每个展开后的 prompt 互异；不满足就不要扇出。
-- 每批**最多 4 个并行 Task**,更多 item 分批发；每个分支的结果收回后,把 `item/outcome/关键产物路径` 逐条写进 state.md。
-- **纪律**：仍受 idea.txt 的资源约束。扇出的子代理合计**最多占 2 张 GPU**，item 数量要和可用算力匹配，别一次铺 30 个抢爆显存。
+- Before spreading out, self-check: ≥2 items, and each expanded prompt differs from the others; if not satisfied, do not fan out.
+- **At most 4 parallel Tasks** per batch; send more items in additional batches. After each branch's result comes back, write `item/outcome/key artifact path` into state.md one by one.
+- **Discipline**: still subject to the resource constraints in idea.txt. Fanned-out sub-agents may occupy **at most 2 GPUs** in total; match the item count to the available compute — don't spread 30 at once and blow out VRAM.
 
-**何时用 / 何时不用**：
-- 用：独立同构批量（实验矩阵、多种子、逐文件审查）。
-- 不用：有依赖的链式步骤、需全局一致、需连贯叙事、单一推理。这些照旧串行或用单个 Task。
+**When to use / when not to use**:
+- Use: independent isomorphic batches (experiment matrices, multiple seeds, per-file reviews).
+- Do not use: chained steps with dependencies, cases needing global consistency, a coherent narrative, or a single line of reasoning. These should still be done serially or with a single Task.
 
-**扇出产物必须过盲审门**：并行分支汇聚的结果不是终点。把各分支产物汇总写进 state.md / results，走正常的 `result-analysis → blind-review` 单元。engine 的反绕过逻辑已保证收尾前必过一次无记忆盲审，扇出再多分支也不例外。
+**Fanned-out artifacts must still pass the blind-review gate**: the results converged from parallel branches are not the end point. Summarize each branch's artifacts into state.md / results, and go through the normal `result-analysis → blind-review` units. The engine's anti-bypass logic already guarantees a memoryless blind review must be passed before wrapping up, no matter how many branches were fanned out.
 
-## 自组织 worker 池：claim 抢占模式（2026-07-20）
+## Self-Organizing Worker Pool: Claim Preemption Mode (2026-07-20)
 
-并行 Task 批量解决**同构**批量（items×模板）；当 workflow_queue 的 DAG 本身出现**异构并行就绪面**（例如多条独立消融链、互不依赖的 coding+run 单元），改用 engine 的抢占协议让 worker 自己抢任务，而不是 coordinator 逐个分派：
+Parallel Task batches solve **isomorphic** batches (items × template); when the workflow_queue's DAG itself develops a **heterogeneous parallel-ready front** (e.g. several independent ablation chains, or mutually independent coding+run units), switch to the engine's preemption protocol and let workers claim tasks themselves, instead of the coordinator dispatching them one by one:
 
 ```
-# coordinator 先看就绪面宽度，决定铺几个 worker（≤ 就绪宽度，且合计仍受 2 GPU 纪律约束）
+# The coordinator first checks the ready-front width to decide how many workers to spin up (≤ the ready width, and still subject to the 2-GPU discipline overall)
 python .../ar-workflow-engine.py ready --project-root <project_root>
-# 每个 worker 用 Task(run_in_background:true) 召唤，prompt 就是让它循环执行：
-python .../ar-workflow-engine.py claim --project-root <project_root> --worker <唯一id> --prompt
+# Each worker is invoked with Task(run_in_background:true); the prompt just tells it to execute in a loop:
+python .../ar-workflow-engine.py claim --project-root <project_root> --worker <unique-id> --prompt
 ```
 
-协议语义（engine 硬保证，全部 flock 原子）：
-- **claim**：抢到即持有租约（默认 2h）；多 worker 并发 claim 绝不双抢（8 进程×12 单元实测零冲突）。
-- **自愈**：worker 崩溃不必通知任何人。租约过期后，下一个 claim/ready 顺手把单元收回 pending；同一单元被回收 3 次自动标 `blocked`（毒丸保护，需人工看原因）。
-- **所有权回写**：`complete/heartbeat/release` 和三条 `after-*` 裁决命令必须带 `--worker`；租约被回收后原 worker 迟到回写会被拒绝（exit 3, claim_lost），防双写。
-- **failed 不得拿来放行队列**：`complete --status failed` 一律被拒（exit 6, required_unit_failure_is_retryable），当前单元保持 running，交给 supervisor 的下一次会话恢复；确认需要人工介入时才用 `--status blocked` 并停止。依赖只认 `done` 或引擎批准的 `skipped`，failed 既不能解锁下游，也不能通过 close。
-- **裁决型单元不许用 complete 收工**：`result-analysis` / `critic` / `blind-review` 的「完成」就是裁决本身（追加 critic 链、决定下一轮、按盲审分数裁 close 还是修订）。对这三型单元调 `complete --status done|skipped` 一律被拒（exit 6, adjudication_required），返回里 `command` 字段直接给出该跑的 `after-*` 命令。`claim --prompt` 发给 worker 的提示也是这条命令，两处读同一张表。需要人工停止时用 `--status blocked`。
-- **修订链（cycle >= 1 的单元）不许逐个 skip**：`complete --status skipped` 对它们被拒（exit 6）。整链确实不再需要时，先在分析收工时落结构化裁决：`after-result-analysis ... --decision stop`（不传默认 continue；state.md 里的 stop_reason 文本只作展示，不构成跳链依据），再配合本轮 critic verdict=finish_ok，用 `skip-cycle --project-root <root> --cycle <N>` 一次跳完；引擎会把出处写进每个单元的 reason，verify-close 只认这个出处。条件不满足时先补齐分析或本轮 critic 产物，不要绕。critic 产物固定写 `critic.md`（每轮覆写）；换文件名会被引擎判为「本轮无 critic 产物」。
-- **队列不能被整份换掉**：引擎认得自己写出去的那份（`engine_seq` + `workflow_queue.engine.json` 镜像）。队列被重写成另一份历史（seq 倒退，或引擎记过的单元整个消失）时，所有命令拒绝在它上面继续跑（exit 7, queue_rewritten），返回里给出恢复用的文件。就地补单元、把某个单元退回 pending 重跑都不受影响。
-- **终态只能由 engine 写**：不要直接编辑 `workflow_queue.json`、`workflow_queue.engine.json` 或 `workflow_events.jsonl`。每个 terminal unit 必须在 hash-chain event 账里有逐字段一致的记录；同时改两份 queue 也不能形成完成权威。
-- **run/review 有完成凭据**：一次 run unit 只能执行自己的 stage，且必须通过 engine 的
-  `execute-run` 产生 `execution_event_hash`。run done 前写
-  `results/run_receipts/<unit>.json`，原始产物放 `results/run_artifacts/<unit>/`；
-  receipt 必须逐项列出该 unit 不可变目录里的全部普通文件。review done 前让 reviewer 在
-  `review.md` frontmatter 写当前 unit/cycle、零 blocker 与真实 model。缺失、旧轮次或哈希变化时
-  `complete` 返回 exit 4。review 不允许用 skipped 绕过证据。
-- **项目权限不由 agent 扩张**：coordinator、runner 和其他 agent 都不得创建或修改 `<project_root>/.claude/settings.json`。close 会拒绝 `Bash(*)`、递归删除和 sudo 等危险项目级放行。
-- **DAG 门控不变**：`blocked_by` 未满足的单元抢不到；blocker 一完成立即可抢。`--types` 可让专职 worker 只抢某类单元（如 runner 只抢 run）。
-- **长任务续租**：预计超时先 `heartbeat`，否则单元会被别人收走重做。
+Protocol semantics (hard-guaranteed by the engine, all flock-atomic):
+- **claim**: claiming immediately grants a lease (2h by default); concurrent claims from multiple workers never double-claim (tested at 8 processes × 12 units with zero conflicts).
+- **Self-healing**: a worker crash requires no notification to anyone. Once the lease expires, the next claim/ready reclaims the unit back to pending as a side effect; a unit reclaimed 3 times is automatically marked `blocked` (poison-pill protection, needs a human to investigate the cause).
+- **Ownership on write-back**: `complete/heartbeat/release` and the three `after-*` adjudication commands must all carry `--worker`; once a lease has been reclaimed, a late write-back from the original worker is rejected（exit 3, claim_lost）, preventing double writes.
+- **failed must not be used to release the queue**: `complete --status failed` is always rejected (exit 6, required_unit_failure_is_retryable); the current unit stays running, to be recovered by the supervisor's next session; only use `--status blocked` and stop once you've confirmed human intervention is needed. Dependencies only recognize `done` or an engine-approved `skipped` — failed can neither unlock downstream units nor pass close.
+- **Adjudication-type units may not be closed out with complete**: for `result-analysis` / `critic` / `blind-review`, "completion" IS the adjudication itself (appending the critic chain, deciding the next round, ruling close vs. revision by blind-review score). Calling `complete --status done|skipped` on these three unit types is always rejected (exit 6, adjudication_required); the returned `command` field gives the `after-*` command to run directly. The prompt that `claim --prompt` sends to a worker is that same command — both read from the same table. Use `--status blocked` when a human needs to stop it.
+- **Revision chains (units with cycle >= 1) must not be skipped one by one**: `complete --status skipped` is rejected for them (exit 6). When an entire chain is truly no longer needed, first record a structured decision when closing out the analysis: `after-result-analysis ... --decision stop` (omitting it defaults to continue; the stop_reason text in state.md is display-only and does not by itself justify skipping the chain), then, together with this round's critic verdict=finish_ok, use `skip-cycle --project-root <root> --cycle <N>` to skip the whole chain in one shot; the engine writes the provenance into each unit's reason, and verify-close only recognizes that provenance. When the conditions aren't met, complete the analysis or this round's critic artifact first — don't work around it. The critic artifact is always written to `critic.md` (overwritten each round); using a different filename will be judged by the engine as "no critic artifact this round".
+- **The queue may not be swapped out wholesale**: the engine recognizes the copy it wrote itself (`engine_seq` + the `workflow_queue.engine.json` mirror). If the queue has been rewritten into a different history (seq regressed, or a unit the engine had recorded has vanished entirely), all commands refuse to keep running on it (exit 7, queue_rewritten), and the response gives the file to use for recovery. Adding a unit in place, or sending a unit back to pending to rerun, is unaffected.
+- **Terminal state may only be written by the engine**: do not directly edit `workflow_queue.json`, `workflow_queue.engine.json`, or `workflow_events.jsonl`. Every terminal unit must have a field-for-field consistent record in the hash-chain event ledger; editing both queue copies at once still cannot establish completion authority.
+- **run/review require completion evidence**: a run unit may only execute its own stage, and must produce an
+  `execution_event_hash` via the engine's `execute-run`. Before run done, write
+  `results/run_receipts/<unit>.json`, with raw artifacts under `results/run_artifacts/<unit>/`;
+  the receipt must list every regular file in that unit's immutable directory item by item. Before review done, have the reviewer write the current
+  unit/cycle, zero blockers, and the real model into `review.md`'s frontmatter. If any of that is missing, from an old cycle, or the hash has changed,
+  `complete` returns exit 4. Review may not use skipped to bypass this evidence.
+- **Project permissions are not expanded by agents**: coordinator, runner, and other agents must not create or modify `<project_root>/.claude/settings.json`. close will refuse dangerous project-level grants such as `Bash(*)`, recursive deletion, or sudo.
+- **DAG gating is unchanged**: a unit whose `blocked_by` is unsatisfied cannot be claimed; as soon as its blocker completes it becomes claimable. `--types` lets a dedicated worker claim only a certain unit type (e.g. a runner claiming only run units).
+- **Lease renewal for long tasks**: send a `heartbeat` in advance if you expect to run long, otherwise the unit will be reclaimed by someone else and redone.
 
-何时用哪个：
-- 就绪面=1（普通串行链）→ 照旧 `next-prompt`，不要开池。
-- 同构批量（多种子/多 baseline）→ 同一条回复里并行多个 Task（见上节）。
-- 异构 DAG 并行（ready width ≥ 2 且单元类型不一）→ claim worker 池；worker 干完自动收敛回串行，join 单元天然等所有分支。
-- 抢占产物同样必须走 `result-analysis → blind-review`；收尾（AUTORESEARCH_DONE）永远只由 coordinator 输出，worker 不许输出。
+Which to use when:
+- Ready front = 1 (a normal serial chain) → keep using `next-prompt`, don't open a pool.
+- Isomorphic batch (multiple seeds/baselines) → multiple parallel Tasks in the same reply (see the section above).
+- Heterogeneous DAG parallelism (ready width ≥ 2 with differing unit types) → a claim worker pool; once workers finish, it naturally converges back to serial, and a join unit naturally waits for all branches.
+- Preempted artifacts must likewise go through `result-analysis → blind-review`; the wrap-up (AUTORESEARCH_DONE) is always output only by the coordinator — workers must never output it.
 
-合同测试见 `ar-runtime/scripts/tests/test_selforg_claim.py`。
+Contract tests are in `ar-runtime/scripts/tests/test_selforg_claim.py`.
 
 ## 两阶段实验协议:Phase 1 预实验 → Phase 2 主实验
 
