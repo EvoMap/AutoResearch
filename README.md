@@ -184,17 +184,17 @@ List the available directions or filter them by keyword:
 .venv/bin/python src/idea_forge/b_library.py agent
 ```
 
-The four registered directions are used by default. To choose your own combination, add the following to `config/providers.local.json`:
+The registered directions are used by default. To choose your own combination, add the following to `config/providers.local.json`:
 
 ```json
 {
   "idea_forge": {
-    "b_directions": ["Agent_运行时与沙箱", "视觉推理"]
+    "b_directions": ["agent_memory", "llm_reasoning"]
   }
 }
 ```
 
-Each direction name corresponds to a Markdown filename under `knowledge_base/`. Adding directions increases generation and review calls; start with a small set when validating a new setup.
+The example uses knowledge files included in this repository. Each direction name is a Markdown filename under `knowledge_base/` without the `.md` suffix. To use a custom direction, create its knowledge file before adding its name to the configuration. Adding directions increases generation and review calls; start with a small set when validating a new setup.
 
 ### 4.4 Optional: Draft a Knowledge Direction with GPT Researcher
 
