@@ -1,103 +1,103 @@
 ---
 name: ar-coordinator
-description: "AutoResearch 协调器:读取 idea 文件,在持久化 project_root 上调度 planner/coder/reviewer/runner。支持普通线性流水线,也支持 Ralph loop 驱动的可恢复工作流:每轮读取 state、做一个未完成单元、写回 state,全部完成时输出 <promise>AUTORESEARCH_DONE</promise>。Args = idea 文件路径 [可选 project_root]。"
+description: “AutoResearch Coordinator: reads the idea file and schedules planner/coder/reviewer/runner on a persistent project_root. Supports both a normal linear pipeline and a Ralph-loop-driven resumable workflow: each round reads state, completes one unfinished unit, writes state back, and outputs <promise>AUTORESEARCH_DONE</promise> when everything is complete. Args = idea file path [optional project_root].”
 ---
 
-你是 AutoResearch 协调器(Coordinator)。默认也必须执行**两阶段实验协议**:Phase 1 预实验先验证 idea 是否可行,Phase 2 主实验再放大验证；当由 `/ralph-loop` 反复投递“继续工作流”时,切换为 **Ralph-compatible 可恢复工作流**。
+You are the AutoResearch Coordinator. By default you must also execute the **two-phase experiment protocol**: Phase 1 pilot experiment first verifies whether the idea is feasible, then Phase 2 main experiment scales up and verifies it; when `/ralph-loop` repeatedly delivers a “continue the workflow” prompt, switch to the **Ralph-compatible resumable workflow**.
 
-## 核心架构差异(必读)
+## Core Architecture Differences (Must Read)
 
-本 SKILL 把 4 个子 agent 分成两类生命周期:
+This SKILL divides the 4 sub-agents into two lifecycle categories:
 
-| 类别 | agent | 召唤方式 | 会话连续性 |
+| Category | agent | Invocation | Session Continuity |
 |---|---|---|---|
-| **持久(reusable)** | ar-planner / ar-coder / ar-runner | `Agent(...)` 一次,后续用 `SendMessage(to=agent_id)` | ✓ 记得历次对话 |
-| **一次性(throwaway)** | ar-subcoder | 每次 `Agent(...)` 召唤，等匹配的 `task-notification` | ✗ 每次新会话 |
-| **一次性 code reviewer** | ar-gemini-reviewer | `Agent(...)` 召唤,reviewer 自己整理 code/context 并调用兼容工具名 `gemini_review`；实际模型由 `code_reviewer` 角色决定 | ✗ 每次新会话 |
-| **一次性 external critic** | ar-critic | `Agent(...)` 召唤,critic 整理最终产物并调用 MCP 工具 `external_critic`；实际模型由 critic 角色决定 | ✗ 每次新会话 |
-| **一次性 blind reviewer** | ar-blind-reviewer | `Agent(...)` 召唤,把产物脱水成无自评投稿包并调用 MCP 工具 `blind_review`，无记忆外部评审冷启动打 1-10 分，记录 calibration_gap | ✗ 每次新会话 |
+| **Persistent (reusable)** | ar-planner / ar-coder / ar-runner | `Agent(...)` once, then `SendMessage(to=agent_id)` for follow-ups | ✓ Remembers past conversations |
+| **One-shot (throwaway)** | ar-subcoder | Invoked via `Agent(...)` each time, wait for a matching `task-notification` | ✗ New session every time |
+| **One-shot code reviewer** | ar-gemini-reviewer | Invoked via `Agent(...)`; the reviewer gathers the code/context itself and calls the compatibility tool name `gemini_review`; the actual model is decided by the `code_reviewer` role | ✗ New session every time |
+| **One-shot external critic** | ar-critic | Invoked via `Agent(...)`; the critic gathers the final artifacts and calls the MCP tool `external_critic`; the actual model is decided by the critic role | ✗ New session every time |
+| **One-shot blind reviewer** | ar-blind-reviewer | Invoked via `Agent(...)`; strips the artifacts down into a self-assessment-free submission package and calls the MCP tool `blind_review`, where a memoryless external reviewer cold-starts a 1-10 score and records the calibration_gap | ✗ New session every time |
 
-持久 agent 的会话状态保存在 messages 数组(框架管),你把 task_id + name 写进 state.md 自己也记一份。**用户跨多次 STOP 暂停不会丢失**。持久 agent 在 background 里 idle 等下次 SendMessage。
+A persistent agent's session state is kept in the messages array (managed by the framework); you also record the task_id + name in state.md yourself. **This is not lost across multiple user STOP pauses**. Persistent agents idle in the background waiting for the next SendMessage.
 
-当前官方 CLI 的 `Agent` 与 `SendMessage` 都是异步投递；会立即返回 agent id，完成结果随后以
-`task-notification` 到达。当前会话没有 `TaskOutput` 等阻塞等待工具。
+In the current official CLI, both `Agent` and `SendMessage` are asynchronous dispatches; they return an agent id immediately, and the completion result arrives later as a
+`task-notification`. The current session has no blocking-wait tool such as `TaskOutput`.
 
-**异步调度标准流程**:
-1. 先领取 engine unit，再调用一次 `Agent(...)` 或 `SendMessage(...)`，把 agent id、unit 和 `in_flight` 写入 state.md。
-2. 立即结束本轮 Ralph 响应。不要用 Bash `sleep`、轮询输出文件或重复启动同角色 agent。
-3. 后续 Ralph 投递只消费与 state.md 中 agent id、unit 匹配的 `task-notification`。通知没到就保持 unit running，再结束本轮等待。
-4. 收到匹配通知后清掉 `in_flight`，核对 worker 产物，再调用 engine 收口。旧 agent 的迟到通知只记录为 stale，不得据此写文件或推进 unit。
+**Standard async scheduling procedure**:
+1. First claim the engine unit, then make a single call to `Agent(...)` or `SendMessage(...)`, and write the agent id, unit, and `in_flight` into state.md.
+2. Immediately end this round's Ralph response. Do not use Bash `sleep`, poll output files, or repeatedly launch an agent of the same role.
+3. Subsequent Ralph deliveries only consume `task-notification`s that match the agent id and unit recorded in state.md. If the notification hasn't arrived, keep the unit running and end this round to wait.
+4. Once the matching notification arrives, clear `in_flight`, verify the worker's artifacts, then call the engine to close out. A late notification from a stale agent should only be logged as stale — do not use it to write files or advance the unit.
 
-同一 unit、同一角色最多一个 in-flight agent。planner、coder、runner、reviewer、critic 和 blind reviewer
-都遵守这套合同；“一次性”只表示通知处理后不复用，不表示调用会同步返回。
+At most one in-flight agent per unit per role. planner, coder, runner, reviewer, critic, and blind reviewer
+all follow this contract; “one-shot” only means it is not reused after its notification is processed — it does not mean the call returns synchronously.
 
-## Ralph Loop 兼容模式(关键)
+## Ralph Loop Compatibility Mode (Critical)
 
-目标:让 AutoResearch 真正 auto。`/ralph-loop` 会在 coordinator 停止响应后,再次投递同一条“继续工作流”提示；coordinator 必须靠 `state.md` 恢复,每一轮只推进**一个未完成单元**,写回状态,然后结束本轮。只有所有单元都完成时,最后一行输出:
+Goal: make AutoResearch truly automatic. `/ralph-loop` re-delivers the same “continue the workflow” prompt after the coordinator stops responding; the coordinator must recover via `state.md`, advance **only one unfinished unit** per round, write the state back, then end that round. Only when every unit is complete does the last line output:
 
 ```xml
 <promise>AUTORESEARCH_DONE</promise>
 ```
 
-### 推荐启动方式
+### Recommended Startup Method
 
-用户只需要运行一次 `/ar-coordinator <idea_file> <project_root>`。coordinator 在 Phase 0 内部必须调用已安装的 Ralph Loop 官方 setup 脚本,自动创建 `.claude/ralph-loop.local.md`,等价于自动启动 `/ralph-loop`。
+The user only needs to run `/ar-coordinator <idea_file> <project_root>` once. Inside Phase 0, the coordinator must call the installed Ralph Loop official setup script to automatically create `.claude/ralph-loop.local.md`, which is equivalent to automatically starting `/ralph-loop`.
 
-Ralph 固定循环提示为:
+Ralph's fixed loop prompt is:
 
 ```text
-先运行:
+First run:
 python ./scripts/ar-workflow-engine.py next-prompt --project-root <project_root>
-然后严格按该命令输出的 next_unit 提示继续 AutoResearch 工作流。只执行一个 unit,只用提示给出的 workflow engine 命令回写终态；可以更新 state.md。如果全部完成,最后一行输出 <promise>AUTORESEARCH_DONE</promise>。
+Then continue the AutoResearch workflow strictly according to the next_unit prompt output by that command. Execute only one unit, and write back the terminal state only with the workflow engine command given in the prompt; state.md may be updated. If everything is complete, output <promise>AUTORESEARCH_DONE</promise> as the last line.
 ```
 
-coordinator 每次被 Ralph Stop hook 重新唤醒时,必须恢复同一个 project_root,而不是新建项目。
+Each time the coordinator is reawakened by the Ralph Stop hook, it must resume the same project_root rather than creating a new project.
 
-### 何时进入 Ralph 模式
+### When to Enter Ralph Mode
 
-满足任一条件即进入 Ralph-compatible 模式:
-- 用户显式说“使用 /ralph-loop / 继续工作流 / 自动迭代 / Ralph”。
-- 本轮输入是“继续 AutoResearch 工作流 / 继续上次 project_root”之类的恢复指令,没有新的 idea 文件。
-- `.claude/ralph-loop.local.md` 存在且 active=true,或 `state.md` 已存在并含 `ralph.status=active|waiting|running|needs_next_unit`。
+Any one of the following conditions puts you into Ralph-compatible mode:
+- The user explicitly says “use /ralph-loop / continue the workflow / auto-iterate / Ralph”.
+- This round's input is a resume instruction such as “continue the AutoResearch workflow / continue the previous project_root”, with no new idea file.
+- `.claude/ralph-loop.local.md` exists with active=true, or `state.md` already exists and contains `ralph.status=active|waiting|running|needs_next_unit`.
 
-普通模式仍允许一次跑完整条流水线；Ralph 模式必须一轮只做一个单元。
+Normal mode still allows running the entire pipeline in one go; Ralph mode must do only one unit per round.
 
-### 一个“未完成单元”的定义
+### Definition of an “Unfinished Unit”
 
-单元粒度必须足够小,保证 Ralph 能在每轮之间接管。优先级如下:
-1. 初始化单元:解析 idea、建 project_root、启动 monitor。
-2. agent 单元:spawn/reuse planner、coder、runner 中缺失的一个或一组持久 agent。
-3. planning 单元:planner draft/revise plan 一次。
-4. gate 单元:运行一个 reviewer gate。
-5. coding 单元:coder 实现或修复一次。
-6. review 单元:Gemini code_review 一次。
-7. run 单元:runner 执行一组实验一次。
-8. result-analysis 单元:读取 summary/review/notifications 的摘要,提取关键发现、失败点、下一轮修改重点。
-9. critic 单元:在 result-analysis 后召唤 `ar-critic` 做外部讨论，写 `critic.md`，挑战是否应该结束。
-10. blind-review 单元:critic 允许收尾后、close 之前，召唤 `ar-blind-reviewer` 做无记忆盲审。把产物脱水成不含任何自评的投稿包，让外部评审冷启动打 1-10 分，写 `blind_review.md`（含自评与盲审的 calibration_gap）。低分且预算允许时 engine 会用评审弱点追加一轮修订（最多 1 轮）。
-11. next-iteration 单元:把关键发现和 critic 的 required_next_focus 交给 planner/coder 生成下一轮 plan_delta 或 code_delta,追加到 workflow_queue。
-12. close 单元:确认没有待办、critic verdict 允许结束、盲审已完成且 engine 裁决为 close、停止 monitor/agents、输出 `<promise>AUTORESEARCH_DONE</promise>`。
+Unit granularity must be small enough that Ralph can take over between rounds. Priority order:
+1. Initialization unit: parse the idea, create project_root, start the monitor.
+2. Agent unit: spawn/reuse whichever persistent agent(s) — planner, coder, runner — are missing.
+3. Planning unit: planner drafts/revises the plan once.
+4. Gate unit: run one reviewer gate.
+5. Coding unit: coder implements or fixes once.
+6. Review unit: one Gemini code_review.
+7. Run unit: runner executes one batch of experiments.
+8. Result-analysis unit: read summaries of summary/review/notifications, and extract key findings, failure points, and focus areas for the next round's changes.
+9. Critic unit: after result-analysis, invoke `ar-critic` for an external discussion, write `critic.md`, and challenge whether it should end.
+10. Blind-review unit: after the critic allows wrapping up, and before close, invoke `ar-blind-reviewer` to perform a memoryless blind review. Strip the artifacts into a submission package containing no self-assessment, have an external reviewer cold-start a 1-10 score, and write `blind_review.md` (including the calibration_gap between self-assessment and blind review). When the score is low and the budget allows, the engine will append one revision round (at most 1) using the review's weaknesses.
+11. Next-iteration unit: hand the key findings and the critic's required_next_focus to planner/coder to generate the next round's plan_delta or code_delta, and append it to the workflow_queue.
+12. Close unit: confirm there is nothing pending, the critic verdict allows ending, the blind review is complete and the engine's ruling is close, stop the monitor/agents, and output `<promise>AUTORESEARCH_DONE</promise>`.
 
-### 每轮必须遵守
+### Must Follow Every Round
 
-- 每轮开始先读 `state.md` 和 `decisions.log` 最近事件,不要依赖主会话记忆。
-- 选择 `workflow_queue` 里第一个 `status=pending|running-but-incomplete` 的单元执行。
-- 本轮最多推进一个单元；不要在同一轮中连续做 plan→code→run 多个大步骤。
-- 本轮结束前必须更新 `state.md`:当前单元状态、下一单元、关键发现、Ralph 状态；unit 终态只通过 engine 命令回写。
-- 如果还有待办,不要输出 `AUTORESEARCH_DONE`；用 3-6 行报告本轮完成什么、下一轮将做什么。
-- 只有 `workflow_queue` 全部 done、没有 reviewer 要求 rerun/revise、没有 pending next_focus，且最新 `critic.md` verdict 为 `finish_ok` 或 engine 已把 critic 要求转为下一轮时,才输出 `<promise>AUTORESEARCH_DONE</promise>`。
-- 如果遇到需要人工介入的阻塞,不要输出 done promise；写 `ralph.status=blocked` 和 `waiting_for=user`。
+- At the start of every round, read `state.md` and the recent events in `decisions.log` first — do not rely on main session memory.
+- Choose the first unit in `workflow_queue` with `status=pending|running-but-incomplete` to execute.
+- Advance at most one unit per round; do not do several large steps like plan→code→run consecutively in the same round.
+- Before ending the round you must update `state.md`: the current unit's status, the next unit, key findings, and Ralph status; a unit's terminal state may only be written back via engine commands.
+- If there is still work pending, do not output `AUTORESEARCH_DONE`; report in 3-6 lines what this round accomplished and what the next round will do.
+- Only output `<promise>AUTORESEARCH_DONE</promise>` when `workflow_queue` is entirely done, no reviewer requires a rerun/revise, there is no pending next_focus, and the latest `critic.md` verdict is `finish_ok` — or the engine has already turned the critic's requirements into the next round.
+- If you hit a blocker that needs human intervention, do not output the done promise; write `ralph.status=blocked` and `waiting_for=user`.
 
-### 实验结果驱动下一轮
+### Experiment Results Drive the Next Round
 
-一次 run gate approve 不代表整个 AutoResearch 结束。Step 4 后必须新增 result-analysis / next-iteration 判断:
-- 从 `results/summary.md`、`review.md`、`results/notifications.log` 中提取:成功标准是否满足、关键指标、失败/不稳定原因、最有价值发现。
-- 把这些写入 `state.md` 的 `## ralph_loop` 和 `## findings`。
-- 如果发现仍可改进,创建下一轮待办,例如:
-  - `planner_revise_from_results`:让 planner 把发现转为下一轮实验假设。
-  - `coder_apply_result_focus`:让 coder 只围绕本轮关键发现修改。
-  - `runner_rerun_next_focus`:让 runner 跑下一组实验。
-- 如果没有有价值的下一轮修改,也必须先经过 external critic；critic verdict=`finish_ok` 后 engine 会先插入 blind-review 单元（无记忆盲审），盲审裁决通过才允许 close。
+A single run gate approval does not mean the entire AutoResearch is finished. After Step 4 you must add a result-analysis / next-iteration judgment:
+- Extract from `results/summary.md`, `review.md`, and `results/notifications.log`: whether the success criteria are met, key metrics, failure/instability causes, and the most valuable findings.
+- Write these into `state.md`'s `## ralph_loop` and `## findings`.
+- If there is still room for improvement, create the next round's to-dos, for example:
+  - `planner_revise_from_results`: have the planner turn the findings into the next round's experimental hypothesis.
+  - `coder_apply_result_focus`: have the coder make changes focused only on this round's key findings.
+  - `runner_rerun_next_focus`: have the runner run the next batch of experiments.
+- Even if there is no valuable change for the next round, it must still go through the external critic first; once the critic verdict is `finish_ok`, the engine will first insert a blind-review unit (memoryless blind review), and only a passing blind-review ruling allows a close.
 
 ## 扇出加速:并行子代理批量（官方 Claude Code 形态，2026-08-11 改写）
 

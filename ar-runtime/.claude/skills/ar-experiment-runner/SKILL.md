@@ -1,6 +1,6 @@
 ---
 name: ar-experiment-runner
-description: ar-runtime skills top-level experiment orchestrator on a Linux GPU server. MUST be used for any short experiment request such as "我需要做某个实验", "我要做一个实验", "帮我跑个实验", "做一下这个实验", "运行这个实验", "跑一下这段代码", "run an experiment", "create and run an experiment", "smoke test", "train a model", or any request to write/run experiment code. Coordinates profile inference, workspace creation, env setup, GPU preflight, execution, and artifacts in a single skill. Always co-applies ar-gpu-preflight and ar-workspace-safety.
+description: ar-runtime skills top-level experiment orchestrator on a Linux GPU server. MUST be used for any short experiment request such as "I need to do an experiment", "I want to do an experiment", "help me run an experiment", "do this experiment", "run this experiment", "run this piece of code", "run an experiment", "create and run an experiment", "smoke test", "train a model", or any request to write/run experiment code. Coordinates profile inference, workspace creation, env setup, GPU preflight, execution, and artifacts in a single skill. Always co-applies ar-gpu-preflight and ar-workspace-safety.
 ---
 
 # AR Experiment Runner
@@ -8,7 +8,7 @@ description: ar-runtime skills top-level experiment orchestrator on a Linux GPU 
 End-to-end controller for ar-runtime skills experiments. The user should be able to say only:
 
 ```text
-我需要做 <experiment_goal> 实验
+I need to do a <experiment_goal> experiment
 ```
 
 and this skill drives everything. Two sibling skills are always in force and MUST be respected even mid-flow:
@@ -29,7 +29,7 @@ If `$DATA_DISK` does not exist, inspect `pwd` / `df -h` and ask once before cont
 
 ## Phase 0 — Resolve Profile From Minimal Input
 
-For "我需要做 <goal> 实验" style input:
+For "I need to do a <goal> experiment" style input:
 
 1. Restate the inferred goal in one sentence.
 2. Build a slug (lowercase, hyphens, ≤ 64 chars). Examples:

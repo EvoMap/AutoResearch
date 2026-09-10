@@ -1,6 +1,6 @@
 ---
 name: ar-workspace-safety
-description: Hard filesystem and Python-environment safety rules for ar-runtime skills on a Linux GPU server. MUST be applied for ANY write, delete, move, install, or python invocation. Triggers like write file, save, mkdir, rm, delete, move, mv, cp, overwrite, cleanup, git reset, git clean, pip install, conda create, conda install, python3, python, miniconda, env, sudo, .ssh, .env, secret, credentials, /etc, /usr, /var, /opt, 删除, 安装, 写入, 清理. Independent of ar-experiment-runner — load and apply this skill even when no experiment context is in scope.
+description: Hard filesystem and Python-environment safety rules for ar-runtime skills on a Linux GPU server. MUST be applied for ANY write, delete, move, install, or python invocation. Triggers like write file, save, mkdir, rm, delete, move, mv, cp, overwrite, cleanup, git reset, git clean, pip install, conda create, conda install, python3, python, miniconda, env, sudo, .ssh, .env, secret, credentials, /etc, /usr, /var, /opt, delete, install, write, cleanup. Independent of ar-experiment-runner — load and apply this skill even when no experiment context is in scope.
 ---
 
 # AR Workspace Safety

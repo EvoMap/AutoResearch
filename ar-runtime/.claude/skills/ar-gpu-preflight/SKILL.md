@@ -1,6 +1,6 @@
 ---
 name: ar-gpu-preflight
-description: GPU need analysis, sizing, allocation, and pre-run RED/YELLOW/GREEN check on a Linux GPU server. MUST be used before running any code that imports torch/jax/tensorflow, mentions cuda/GPU, uses .cuda() / .to("cuda") / device="cuda", may allocate GPU memory, runs longer than 30s, or trains/infers a model. Triggers like nvidia-smi, CUDA, torch.cuda, GPU, 显存, 显卡, 跑代码, 运行代码, 跑一下, 训练, train, inference, smoke test, preflight, RED YELLOW GREEN, CUDA_VISIBLE_DEVICES, OOM. Independent of ar-experiment-runner — load and apply this skill even when the user gives a one-line GPU code request.
+description: GPU need analysis, sizing, allocation, and pre-run RED/YELLOW/GREEN check on a Linux GPU server. MUST be used before running any code that imports torch/jax/tensorflow, mentions cuda/GPU, uses .cuda() / .to("cuda") / device="cuda", may allocate GPU memory, runs longer than 30s, or trains/infers a model. Triggers like nvidia-smi, CUDA, torch.cuda, GPU, VRAM, graphics card, run code, execute code, run it, training, train, inference, smoke test, preflight, RED YELLOW GREEN, CUDA_VISIBLE_DEVICES, OOM. Independent of ar-experiment-runner — load and apply this skill even when the user gives a one-line GPU code request.
 ---
 
 # AR GPU Preflight
