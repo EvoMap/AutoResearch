@@ -16,7 +16,7 @@ End-to-end controller for a one-off experiment. For a full idea → plan → rev
 
 Always apply `ar-gpu-preflight` and `ar-workspace-safety`. If they are not loaded, follow their rules anyway.
 
-Grok: `run_terminal_command` for shell (background for jobs > ~5 min), `write` for code. Do not spawn nested experiment agents unless independent isomorphic items need `ar-experiment-matrix`.
+Grok: `run_terminal_command` for shell (background for jobs > ~5 min), `write` for code. Independent isomorphic items: fan out with `/ar-experiment-matrix` or same-turn `spawn_subagent`.
 
 ## Default paths
 

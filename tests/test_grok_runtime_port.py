@@ -52,10 +52,15 @@ def test_grok_coordinator_uses_grok_harness_and_the_engine() -> None:
     assert "idea_provenance: <project_root>/idea_provenance.json" in skill
 
     assert 'name: "ar-coordinator"' in workflow
-    assert "next-prompt" in workflow
-    assert "ar-planner" in workflow
-    assert "ar-blind-reviewer" in workflow
+    assert "ready --project-root" in workflow
+    assert "claim --project-root" in workflow
+    assert "parallel(jobs)" in workflow
     assert "after-result-analysis" in workflow
+    assert "Do not spawn subagents" not in workflow
+    assert "next-prompt" not in workflow
+    assert "python \"$ENGINE\" ready" in skill or "ready --project-root" in skill
+    assert "claim" in skill
+    assert "one engine unit at a time" not in skill.lower()
 
 
 def test_grok_reviewer_and_critic_do_not_write_producer_artifacts() -> None:
