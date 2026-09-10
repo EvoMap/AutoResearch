@@ -1,7 +1,11 @@
-# ar-runtime：官方 Claude Code 上的执行工作流
+# ar-runtime：执行工作流（Claude Code 与 Grok）
 
-AutoResearch 的执行 runtime：官方 `claude` CLI 加载本目录的 agents、skills 与 MCP
-配置，驱动 `scripts/ar-workflow-engine.py` 的确定性队列完成一个研究项目。
+AutoResearch 的执行 runtime：把一份 Idea 推进为计划、代码、实验结果和独立评审。
+确定性队列仍由 `scripts/ar-workflow-engine.py` 拥有。有两套 harness：
+
+- 官方 `claude` CLI 加载本目录 `.claude/` 的 agents、skills 与 MCP。
+- Grok Build 加载仓库根 `.grok/` 的 agents、skills、workflows，以及本目录
+  `.grok/config.toml` / `.mcp.json` 的 MCP。
 
 ## 前置
 
@@ -39,3 +43,42 @@ AutoResearch 的执行 runtime：官方 `claude` CLI 加载本目录的 agents�
 
 判断真实进度读 `<project_root>/state.md` 的 `## agents` 段和实际产物，不要只信
 `workflow_queue.json` 的 status。
+
+## Grok
+
+Skills / agents / workflows 在仓库根 `.grok/`（Grok 从 cwd 向上走到 git root 都会发现）。
+在仓库根或 `ar-runtime/` 启动均可。
+
+交互式：
+
+```text
+cd /path/to/AutoResearch
+grok
+/ar-coordinator examples/ideas/synthetic_gpu_smoke.md data/projects/<新目录>
+```
+
+引擎驱动的整条队列（替代 ralph-loop）：
+
+```text
+/ar-coordinator
+```
+
+或带参数跑 workflow（在 `/workflows` 里看进度）：
+
+```text
+args.idea_file = examples/ideas/synthetic_gpu_smoke.md
+args.project_root = data/projects/<新目录>
+```
+
+已编码实验的并行种子/消融：`/ar-experiment-matrix`（`args.project_root` + `args.items`，最多 4 路）。
+
+非交互：
+
+```bash
+grok --yolo -p "/ar-coordinator examples/ideas/synthetic_gpu_smoke.md data/projects/<新目录>"
+```
+
+Grok 子 agent 不能再 spawn 子 agent：`ar-coder` 把大模块写成 `subcoder_requests`，由
+coordinator / `ar-coordinator` workflow 在父会话 fan-out `ar-subcoder`。Reviewer / critic
+通过 `search_tool` + `use_tool` 调 MCP（`ar-gemini-review__gemini_review`、
+`ar-external-critic__external_critic`、`ar-external-critic__blind_review`）。
