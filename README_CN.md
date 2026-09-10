@@ -190,17 +190,17 @@ set +a
 .venv/bin/python src/idea_forge/b_library.py agent
 ```
 
-默认使用已注册的四个方向。要指定自己的组合，在 `config/providers.local.json` 中加入：
+默认使用已注册的方向。要指定自己的组合，在 `config/providers.local.json` 中加入：
 
 ```json
 {
   "idea_forge": {
-    "b_directions": ["Agent_运行时与沙箱", "视觉推理"]
+    "b_directions": ["agent_memory", "llm_reasoning"]
   }
 }
 ```
 
-方向名对应 `knowledge_base/` 下的 Markdown 文件名。每增加一个方向，构思和评审调用量都会增加；第一次运行建议先选少量方向验证流程。
+示例使用仓库自带的知识文件。方向名对应 `knowledge_base/` 下不带 `.md` 后缀的 Markdown 文件名。使用自定义方向前，先创建对应的知识文件，再把名称加入配置。每增加一个方向，构思和评审调用量都会增加；第一次运行建议先选少量方向验证流程。
 
 ### 4.4 可选：用 GPT Researcher 起草知识方向
 

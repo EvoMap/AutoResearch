@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import builtins
 import json
+import re
 import sys
 import types
 
@@ -244,3 +245,17 @@ def test_the_pending_rerun_uses_the_configured_directions(forge, monkeypatch, tm
     assert seen["b_ids"] == ["llm_reasoning"]
     assert json.loads(pending.read_text())["seeds"] == [], "the queue is drained after a run"
     assert published == [True]
+
+
+@pytest.mark.parametrize("document", ["README.md", "README_CN.md"])
+def test_readme_direction_example_uses_bundled_knowledge(forge, document):
+    text = (REPO / document).read_text(encoding="utf-8")
+    examples = [json.loads(block) for block in re.findall(r"```json\n(.*?)```", text, re.S)
+                if '"b_directions"' in block]
+    assert examples, f"{document} must include a direction configuration example"
+    for config in examples:
+        forge.llm.load_config = lambda: config
+        selected, _ = forge.bl.select_b_directions()
+        assert selected
+        for direction in selected:
+            assert forge.bl.knowledge_path(direction["id"]) is not None
