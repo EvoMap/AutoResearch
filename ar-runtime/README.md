@@ -57,20 +57,22 @@ grok
 /ar-coordinator examples/ideas/synthetic_gpu_smoke.md data/projects/<新目录>
 ```
 
-引擎驱动的整条队列（替代 ralph-loop）：
+引擎驱动的整条队列（Grok 并行 claim 池，替代 ralph-loop）：
 
 ```text
 /ar-coordinator
 ```
 
-或带参数跑 workflow（在 `/workflows` 里看进度）：
+workflow 参数（`/workflows` 看进度）：
 
 ```text
 args.idea_file = examples/ideas/synthetic_gpu_smoke.md
 args.project_root = data/projects/<新目录>
+args.max_parallel = 8    # ready-front 每波 worker 数，1–32
+args.max_waves = 24
 ```
 
-已编码实验的并行种子/消融：`/ar-experiment-matrix`（`args.project_root` + `args.items`，最多 4 路）。
+已编码实验的并行种子/消融：`/ar-experiment-matrix`（`args.project_root` + `args.items`，默认最多 16 路，上限 32）。
 
 非交互：
 
@@ -78,7 +80,7 @@ args.project_root = data/projects/<新目录>
 grok --yolo -p "/ar-coordinator examples/ideas/synthetic_gpu_smoke.md data/projects/<新目录>"
 ```
 
-Grok 子 agent 不能再 spawn 子 agent：`ar-coder` 把大模块写成 `subcoder_requests`，由
-coordinator / `ar-coordinator` workflow 在父会话 fan-out `ar-subcoder`。Reviewer / critic
-通过 `search_tool` + `use_tool` 调 MCP（`ar-gemini-review__gemini_review`、
-`ar-external-critic__external_critic`、`ar-external-critic__blind_review`）。
+父会话和 workflow 用 `parallel()` / 同轮 `spawn_subagent` 铺 ready-front。子 agent
+不能嵌套，所以大模块的 `subcoder_requests` 由父级 fan-out `ar-subcoder`；claim
+worker 作为叶子则自己写完模块。Reviewer / critic 通过 `search_tool` + `use_tool`
+调 MCP。

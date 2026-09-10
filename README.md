@@ -362,7 +362,7 @@ grok --yolo -p "/ar-coordinator examples/ideas/synthetic_gpu_smoke.md data/proje
 
 `/ar-coordinator` is the interactive skill. The `ar-coordinator` workflow is the unattended
 unit loop (Grok's stand-in for ralph-loop). `/ar-experiment-matrix` fans out independent
-seeds or ablations (max 4). See `ar-runtime/README.md`.
+seeds or ablations (default 16, max 32). See `ar-runtime/README.md`.
 
 For non-interactive runs, use the supervisor. It reaps the process group, retries terminal API failures within a restart budget, and stores a manifest for every attempt:
 
