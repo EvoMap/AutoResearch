@@ -14,6 +14,10 @@
   <a href="https://trendshift.io/repositories/202902?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-202902" target="_blank" rel="noopener noreferrer">
     <img src="https://trendshift.io/api/badge/trendshift/repositories/202902/daily?language=Python" alt="EvoMap/AutoResearch | Trendshift" width="250" height="55"/>
   </a>
+  &nbsp;
+  <a href="https://huggingface.co/papers/2608.17906" target="_blank" rel="noopener noreferrer">
+    <img src="docs/images/hf-trending-first.svg" alt="Hugging Face Trending Papers: ranked first" width="250" height="55"/>
+  </a>
 </p>
 
 <p align="center">
