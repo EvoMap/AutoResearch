@@ -93,8 +93,11 @@ role
 
 ### 4.1 入口
 
-`ar-runtime` 由官方 Claude Code CLI 执行。交互式入口是 `/ar-coordinator`，非交互式入口是
-`ar-runtime/scripts/ar-supervisor.sh`。两种入口使用同一套 agents、skills、工作流引擎和配置投影。
+`ar-runtime` 可由官方 Claude Code CLI 或 Grok Build 执行。Claude 交互式入口是
+`/ar-coordinator`，非交互式入口是 `ar-runtime/scripts/ar-supervisor.sh`。
+Grok 入口是仓库根 `.grok/` 下的 `/ar-coordinator` skill 或 `ar-coordinator` workflow
+（替代 ralph-loop）。两套 harness 共用同一套工作流引擎和 MCP producer；Grok 的
+agents/skills 在 `.grok/`，Claude 的在 `ar-runtime/.claude/`。
 
 ### 4.2 状态机
 
