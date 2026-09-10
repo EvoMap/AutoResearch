@@ -11,6 +11,12 @@
 </p>
 
 <p align="center">
+  <a href="https://trendshift.io/repositories/202902?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-202902" target="_blank" rel="noopener noreferrer">
+    <img src="https://trendshift.io/api/badge/trendshift/repositories/202902/daily?language=Python" alt="EvoMap/AutoResearch | Trendshift" width="250" height="55"/>
+  </a>
+</p>
+
+<p align="center">
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-47C9E7"></a>
   <a href="https://www.python.org/"><img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-0B1324"></a>
   <a href="https://evomap.ai"><img alt="EvoMap ecosystem" src="https://img.shields.io/badge/EvoMap-Ecosystem-47C9E7"></a>
