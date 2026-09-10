@@ -781,7 +781,11 @@ def render_one(slug):
 
 
 def render_all(only=None):
-    slugs = sorted(d.name for d in PROJECTS_DIR.iterdir() if d.is_dir() and (d / "state.md").exists())
+    try:
+        entries = list(PROJECTS_DIR.iterdir())
+    except FileNotFoundError:
+        entries = []
+    slugs = sorted(d.name for d in entries if d.is_dir() and (d / "state.md").exists())
     selected = set(only) if only is not None else None
     unknown = sorted(selected - set(slugs)) if selected is not None else []
     if unknown:
