@@ -1,0 +1,18 @@
+# Grok project config for AutoResearch. Only [mcp_servers], [plugins],
+# [permission], and [mcp] max_output_bytes are read from this file.
+# Run from the repo root or from ar-runtime/; Grok walks up to git root.
+
+[permission]
+deny = ["Bash(rm -rf *)"]
+
+[mcp_servers.ar-gemini-review]
+command = "bun"
+args = ["run", "scripts/ar-gemini-review-mcp.ts"]
+cwd = "ar-runtime"
+enabled = true
+
+[mcp_servers.ar-external-critic]
+command = "bun"
+args = ["run", "scripts/ar-external-critic-mcp.ts"]
+cwd = "ar-runtime"
+enabled = true

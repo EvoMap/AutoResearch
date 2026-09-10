@@ -1,0 +1,14 @@
+# Used when the session cwd is ar-runtime/ (wins over the repo-root file).
+
+[permission]
+deny = ["Bash(rm -rf *)"]
+
+[mcp_servers.ar-gemini-review]
+command = "bun"
+args = ["run", "./scripts/ar-gemini-review-mcp.ts"]
+enabled = true
+
+[mcp_servers.ar-external-critic]
+command = "bun"
+args = ["run", "./scripts/ar-external-critic-mcp.ts"]
+enabled = true
