@@ -308,3 +308,34 @@ def test_declared_project_provenance_cannot_silently_disappear(dashboard) -> Non
 
     with pytest.raises(dashboard.DashboardDataError, match="declares idea_provenance"):
         dashboard.load_project("demo")
+
+
+@pytest.mark.parametrize("missing", [True, False])
+def test_cli_renders_an_empty_project_overview(dashboard, monkeypatch, capsys, missing):
+    if missing:
+        monkeypatch.setattr(dashboard, "PROJECTS_DIR", dashboard.PROJECT_ROOT / "absent" / "projects")
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), "--all"])
+
+    assert dashboard.main() == 0
+
+    output = capsys.readouterr()
+    assert "(0 projects)" in output.out
+    assert output.err == ""
+    page = (dashboard.PROJECT_ROOT / "dashboard_index.html").read_text(encoding="utf-8")
+    assert "0 projects" in page
+    if missing:
+        assert not dashboard.PROJECTS_DIR.exists()
+
+
+def test_missing_projects_directory_still_rejects_unknown_filter(dashboard, monkeypatch):
+    monkeypatch.setattr(dashboard, "PROJECTS_DIR", dashboard.PROJECT_ROOT / "absent" / "projects")
+    with pytest.raises(SystemExit, match=r"unknown project.*missing.*none"):
+        dashboard.render_all(only={"missing"})
+
+
+def test_projects_path_must_be_a_directory(dashboard, monkeypatch):
+    invalid = dashboard.PROJECT_ROOT / "not-a-directory"
+    invalid.write_text("invalid", encoding="utf-8")
+    monkeypatch.setattr(dashboard, "PROJECTS_DIR", invalid)
+    with pytest.raises(NotADirectoryError):
+        dashboard.render_all()
