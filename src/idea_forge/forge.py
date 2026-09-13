@@ -20,12 +20,18 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import llm_client
 from llm_client import UnknownModel, call_model, call_role
 import roles as role_policy
-from idea_forge.b_library import select_b_directions, format_b_context
+from idea_forge.b_library import format_b_context, load_knowledge, select_b_directions
 from idea_forge.consensus_check import filter_by_consensus
 import resource_profile
 from plans import FAILURE_MARKER, has_usable_plan
 from verdicts import PASS, UNPARSED, parse_reviewer_verdict, reviewer_verdict_line
 from idea_forge.freshness import step2_5_freshness_refresh
+from idea_forge.research_profile import (
+    OFFLINE_SOURCE_PACK,
+    profile_response_error,
+    render_profile_prompt,
+    validate_research_profile,
+)
 
 # 构思席位。每个席位各自独立思考，交叉验证时全员评审（包括生成者自己）。这个环节的
 # 独立性是算法合同：至少三个不同模型，三席时两票构成多数。
@@ -137,7 +143,9 @@ def call_idea_model(model_name, prompt, **kwargs):
         return None
 
 
-def generate_deep_idea_prompt(seed, b_direction):
+def generate_deep_idea_prompt(
+    seed, b_direction, research_profile=None, source_pack=None
+):
     """
     构造深度 idea 生成 prompt
     关键变化: 加入领域方向的完整知识文档，让模型具备必要的领域常识
@@ -152,7 +160,18 @@ def generate_deep_idea_prompt(seed, b_direction):
             core_insight = line
             break
 
-    b_context = format_b_context(b_direction, include_full_knowledge=True)
+    if research_profile is not None and source_pack is None:
+        source_pack = load_knowledge(b_direction.get("knowledge_md", ""))
+    b_context = format_b_context(
+        b_direction,
+        include_full_knowledge=True,
+        knowledge_text=source_pack,
+    )
+
+    if research_profile is not None:
+        return render_profile_prompt(
+            research_profile, "ideation_prompt", seed, b_direction, b_context
+        )
 
     prompt = (
         "你是一位在目标领域深耕多年的顶级研究者，目标是产出能被 ICLR/NeurIPS/ICML 接收的论文。\n"
@@ -193,7 +212,7 @@ def generate_deep_idea_prompt(seed, b_direction):
     return prompt
 
 
-def step1_deep_ideation(seed, b_directions):
+def step1_deep_ideation(seed, b_directions, research_profile=None):
     """
     Step 1: 对每个研究信号和领域方向组合，让每个构思席位各自深度构思
     """
@@ -207,29 +226,40 @@ def step1_deep_ideation(seed, b_directions):
     tasks = []
     for b in b_directions:
         print(f"\n  领域方向: {b.get('domain', '')} | {b.get('problem', '')[:50]}")
-        prompt = generate_deep_idea_prompt(seed, b)
+        source_pack = (
+            load_knowledge(b.get("knowledge_md", ""))
+            if research_profile is not None else None
+        )
+        prompt = generate_deep_idea_prompt(seed, b, research_profile, source_pack)
         for model in IDEA_MODELS:
             print(f"    [{model}] 构思中...")
-            tasks.append((b, model, prompt))
+            tasks.append((b, model, prompt, source_pack))
 
     def ideate(task):
-        b, model, prompt = task
+        b, model, prompt, source_pack = task
         result = call_idea_model(
             model, prompt, **{**IDEATOR_REQUEST, "temperature": 0.3})
-        return b, model, result
+        return b, model, result, source_pack
 
-    for b, model, result in _run_parallel(ideate, tasks):
+    for b, model, result, source_pack in _run_parallel(ideate, tasks):
         if not result:
             print(f"    [{model}] 调用失败")
             continue
         if "NO_MATCH" in result:
             print(f"    [{model}] → 无合理映射")
             continue
+        if research_profile is not None:
+            profile_error = profile_response_error(
+                research_profile, "ideation", result, source_pack
+            )
+            if profile_error:
+                print(f"    [{model}] → 不符合 {research_profile.name}: {profile_error}")
+                continue
 
         core_line = ""
         for line in result.split("\n"):
             line = line.strip()
-            if "核心idea" in line:
+            if "核心idea" in line or line.lower().startswith("mechanism:"):
                 core_line = line
                 break
 
@@ -248,7 +278,7 @@ def step1_deep_ideation(seed, b_directions):
     return all_ideas
 
 
-def step2_strict_validation(ideas):
+def step2_strict_validation(ideas, research_profile=None):
     """
     Step 2: 严格交叉验证（目标顶会水平）
     全员评审：所有 IDEA_MODELS（包括生成者自己）都参与打分，避免单一模型主导否决。
@@ -263,11 +293,19 @@ def step2_strict_validation(ideas):
     print("────────────────────────────────────────────────────────────")
     pass_threshold = len(IDEA_MODELS) // 2 + 1
     print(f"  Step 2: 严格交叉验证 ({len(ideas)} 个候选 × {len(IDEA_MODELS)} 评审员/全员评审)")
-    print(f"  通过门槛：D1/D2/D3 ≥{pass_threshold} 评审员通过；D4 仅作软警告供 Step 2.5 刷新")
+    if research_profile is None:
+        print(f"  通过门槛：D1/D2/D3 ≥{pass_threshold} 评审员通过；D4 仅作软警告供 Step 2.5 刷新")
+    else:
+        print(f"  通过门槛：{research_profile.name} 全项通过，且 ≥{pass_threshold} 评审员通过")
     tasks = []
     for idx, item in enumerate(ideas):
         idea_text = item.get("idea_text", "")
-        review_prompt = (
+        if research_profile is not None:
+            review_prompt = render_profile_prompt(
+                research_profile, "cross_review_prompt", item
+            )
+        else:
+            review_prompt = (
                 "你是一位顶级 AI 会议（NeurIPS/ICLR/ICML/CVPR）的资深审稿人。\n"
                 "当前是 2026 年 5 月。请严格按四个维度评审下面的研究方案。\n\n"
                 "=== 方案 ===\n" + idea_text + "\n=== 方案结束 ===\n\n"
@@ -307,8 +345,35 @@ def step2_strict_validation(ideas):
         for reviewer, result in responses[idx]:
             tag = "(self)" if reviewer == source else ""
             if not result:
+                if research_profile is not None:
+                    unreadable += 1
+                    reviews.append({
+                        "reviewer": reviewer,
+                        "passed": False,
+                        "verdict": UNPARSED,
+                        "review": "",
+                        "verdict_line": "",
+                        "profile_error": "missing review",
+                    })
                 print(f"    [{reviewer}{tag}] ⚠️ 调用失败")
                 continue
+
+            if research_profile is not None:
+                profile_error = profile_response_error(
+                    research_profile, "cross_review", result
+                )
+                if profile_error:
+                    unreadable += 1
+                    reviews.append({
+                        "reviewer": reviewer,
+                        "passed": False,
+                        "verdict": UNPARSED,
+                        "review": result,
+                        "verdict_line": reviewer_verdict_line(result),
+                        "profile_error": profile_error,
+                    })
+                    print(f"    [{reviewer}{tag}] ⚠️ {profile_error}")
+                    continue
 
             verdict = parse_reviewer_verdict(result)
             if verdict == UNPARSED:
@@ -375,7 +440,7 @@ def step2_strict_validation(ideas):
     return validated
 
 
-def step3_plan_generation(validated_ideas):
+def step3_plan_generation(validated_ideas, research_profile=None):
     """
     Step 3: 为通过验证的 idea 生成详细计划书（预实验 + 完整计划）
     """
@@ -384,7 +449,10 @@ def step3_plan_generation(validated_ideas):
 
     tasks = []
     for item in validated_ideas:
-        prompt = (
+        if research_profile is not None:
+            prompt = render_profile_prompt(research_profile, "planning_prompt", item)
+        else:
+            prompt = (
             "你是一位有丰富实验经验的 AI 研究者。请为以下通过同行评审的 idea 制定可执行计划书。\n\n"
             "=== Idea ===\n" + item.get("idea_text", "") + "\n===\n\n"
             "【硬件约束】\n" + resource_profile.load().describe() + "\n\n"
@@ -409,11 +477,19 @@ def step3_plan_generation(validated_ideas):
         lambda prompt: call_role("planner", prompt, temperature=0.3), tasks)
 
     for item, result in zip(validated_ideas, results):
-        if result:
+        profile_error = (
+            profile_response_error(
+                research_profile, "planning", result or "", item.get("idea_text", "")
+            )
+            if research_profile is not None else None
+        )
+        if result and not profile_error:
             item["plan"] = result
             print(f"    ✅ {item.get('b_domain', '')} [{item.get('source_model', '')}]")
         else:
             item["plan"] = FAILURE_MARKER
+            if profile_error:
+                item["plan_rejection"] = profile_error
             print("    ❌ 所有模型均失败")
 
     return validated_ideas
@@ -430,12 +506,14 @@ def resolve_directions(b_ids=None):
     return select_b_directions(b_ids)[0]
 
 
-def run_idea_forge(seeds, b_ids=None, checkpoint_path=None):
+def run_idea_forge(seeds, b_ids=None, checkpoint_path=None, research_profile=None):
     """
     Idea Forge 主流程
     seeds: 大浪淘沙输出的强推荐种子
     b_ids: 指定使用哪些领域方向（None = 全部）
     """
+    if research_profile is not None:
+        research_profile = validate_research_profile(research_profile)
     require_idea_panel()
     b_library = resolve_directions(b_ids)
     repo_root = Path(__file__).parent.parent.parent
@@ -454,12 +532,21 @@ def run_idea_forge(seeds, b_ids=None, checkpoint_path=None):
         "b_ids": [direction["id"] for direction in b_library],
         "validation": "strict (顶会标准, >50% 通过)",
     }
+    if research_profile is not None:
+        run_config.update({
+            "research_profile": research_profile.name,
+            "freshness": research_profile.freshness,
+            "validation": f"strict ({research_profile.name}, >50% all-rubric pass)",
+        })
     all_results = []
     if explicit_checkpoint and output_file.exists():
         saved = json.loads(output_file.read_text(encoding="utf-8"))
         saved_config = saved.get("config", {})
-        for key in ("idea_models", "plan_models", "b_ids"):
-            if saved_config.get(key) != run_config[key]:
+        checkpoint_keys = [
+            "idea_models", "plan_models", "b_ids", "research_profile", "freshness"
+        ]
+        for key in checkpoint_keys:
+            if saved_config.get(key) != run_config.get(key):
                 raise RuntimeError(f"checkpoint 的 {key} 与当前配置不同，拒绝混合两次运行")
         all_results = list(saved.get("results", []))
 
@@ -471,7 +558,10 @@ def run_idea_forge(seeds, b_ids=None, checkpoint_path=None):
     print(f"  当前最大并发请求: {llm_client.configured_max_concurrency()}（每批重新读取配置）")
     if all_results:
         print(f"  断点续跑: 已完成 {len(all_results)} 个种子")
-    print("  目标: 顶会级别论文")
+    if research_profile is None:
+        print("  目标: 顶会级别论文")
+    else:
+        print(f"  目标: {research_profile.goal}")
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
     completed = {_seed_key(record) for record in all_results}
@@ -496,7 +586,7 @@ def run_idea_forge(seeds, b_ids=None, checkpoint_path=None):
         }
 
         # Step 1: 深度构思
-        ideas = step1_deep_ideation(seed, b_library)
+        ideas = step1_deep_ideation(seed, b_library, research_profile)
         record["total_ideas"] = len(ideas)
         if not ideas:
             print("  无有效 idea，跳过")
@@ -506,7 +596,7 @@ def run_idea_forge(seeds, b_ids=None, checkpoint_path=None):
             continue
 
         # Step 2: 严格交叉验证
-        validated = step2_strict_validation(ideas)
+        validated = step2_strict_validation(ideas, research_profile)
         record["validated"] = len(validated)
         if not validated:
             print("  无 idea 通过验证")
@@ -523,7 +613,10 @@ def run_idea_forge(seeds, b_ids=None, checkpoint_path=None):
             continue
 
         # Step 2.5: 时新性刷新
-        validated = step2_5_freshness_refresh(validated, enable_arxiv=True)
+        if research_profile is not None and research_profile.freshness == OFFLINE_SOURCE_PACK:
+            print("  Step 2.5: OFFLINE_SOURCE_PACK（不搜索、不刷新、不发起模型调用）")
+        else:
+            validated = step2_5_freshness_refresh(validated, enable_arxiv=True)
 
         # 共识检查（防撞 B 领域常识）
         consensus_passed = filter_by_consensus(validated)
@@ -535,7 +628,7 @@ def run_idea_forge(seeds, b_ids=None, checkpoint_path=None):
             continue
 
         # Step 3: 计划书生成
-        with_plans = step3_plan_generation(consensus_passed)
+        with_plans = step3_plan_generation(consensus_passed, research_profile)
 
         record["plans"] = len([p for p in with_plans if has_usable_plan(p)])
         record["results"] = with_plans

@@ -127,7 +127,7 @@ def test_forge_resumes_after_the_last_completed_seed(monkeypatch, tmp_path) -> N
 
     calls = []
 
-    def crash_on_second(seed, _directions):
+    def crash_on_second(seed, _directions, _profile=None):
         calls.append(seed["title"])
         if seed["title"] == "second":
             raise RuntimeError("interrupted")
@@ -144,7 +144,7 @@ def test_forge_resumes_after_the_last_completed_seed(monkeypatch, tmp_path) -> N
     calls.clear()
     monkeypatch.setattr(
         forge, "step1_deep_ideation",
-        lambda seed, _directions: calls.append(seed["title"]) or [])
+        lambda seed, _directions, _profile=None: calls.append(seed["title"]) or [])
     result = forge.run_idea_forge(seeds, checkpoint_path=checkpoint)
 
     assert calls == ["second"]

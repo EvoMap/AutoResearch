@@ -36,7 +36,7 @@ def forge(monkeypatch, tmp_path):
     importlib.reload(module)
     monkeypatch.setattr(module, "step2_5_freshness_refresh", lambda items, **k: items)
     monkeypatch.setattr(module, "filter_by_consensus", lambda items: items)
-    monkeypatch.setattr(module, "step3_plan_generation", lambda items: items)
+    monkeypatch.setattr(module, "step3_plan_generation", lambda items, profile=None: items)
     monkeypatch.setattr(module, "resolve_directions", lambda b_ids=None: [
         {"id": "b", "domain": "d", "problem": "p", "knowledge_md": "", "datasets": [], "baselines": []}])
     monkeypatch.setattr(module, "OUTPUT_DIR", tmp_path, raising=False)
@@ -44,8 +44,8 @@ def forge(monkeypatch, tmp_path):
 
 
 def run(module, ideas, validated, tmp_path, monkeypatch):
-    monkeypatch.setattr(module, "step1_deep_ideation", lambda seed, lib: ideas)
-    monkeypatch.setattr(module, "step2_strict_validation", lambda items: validated)
+    monkeypatch.setattr(module, "step1_deep_ideation", lambda seed, lib, profile=None: ideas)
+    monkeypatch.setattr(module, "step2_strict_validation", lambda items, profile=None: validated)
     checkpoint = tmp_path / f"forge-{len(list(tmp_path.glob('forge-*.json')))}.json"
     module.run_idea_forge([{"title": "seed"}], checkpoint_path=checkpoint)
     return json.loads(checkpoint.read_text(encoding="utf-8"))

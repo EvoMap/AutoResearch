@@ -225,7 +225,7 @@ def get_b_by_id(b_id):
     return direction_from_file(b_id)
 
 
-def format_b_context(b_direction, include_full_knowledge=True):
+def format_b_context(b_direction, include_full_knowledge=True, knowledge_text=None):
     """
     格式化领域方向的上下文
     include_full_knowledge=True: 包含完整的 MD 知识（长但深）
@@ -237,7 +237,10 @@ def format_b_context(b_direction, include_full_knowledge=True):
     ctx += "\n基线方法: " + ", ".join(b_direction.get("baselines", []))
 
     if include_full_knowledge:
-        md = load_knowledge(b_direction.get("knowledge_md", ""))
+        md = (
+            load_knowledge(b_direction.get("knowledge_md", ""))
+            if knowledge_text is None else knowledge_text
+        )
         if md:
             ctx += "\n\n【社区深度知识 - 必读！】\n" + md
 
