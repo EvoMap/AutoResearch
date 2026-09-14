@@ -83,7 +83,7 @@ Research agents can invent missing details when evidence is thin and repeatedly 
 
 ### 3.1 Clone the Repository and Check the Environment
 
-Prepare a Linux or SSH machine with Git, Python 3.10+, and `python3-venv` installed:
+Prepare a Linux machine, either local or accessible over SSH, with Git, Python 3.10+, and `python3-venv` installed:
 
 ```bash
 git clone https://github.com/EvoMap/AutoResearch.git
@@ -91,7 +91,7 @@ cd AutoResearch
 bash scripts/bringup.sh
 ```
 
-`bringup.sh` creates `.venv`, installs Python dependencies, runs the baseline tests and secret scan, and checks the current model configuration. It does not contact model services or incur API charges.
+`scripts/bringup.sh` creates `.venv`, installs Python dependencies, runs the baseline tests and secret scan, and checks the current model configuration. It does not contact model services or incur API charges.
 
 On the first run, before API credentials are configured, a final `BLOCKED` result or nonzero exit is expected. Confirm that Python setup, dependency installation, and tests succeeded, then configure credentials in the next step.
 
@@ -335,7 +335,9 @@ data/ideas/my_experiment.txt
 
 ### 5.4 Start the Coordinator
 
-The current Alpha entrypoint grants Claude Code broad tool permissions. Run it only in an isolated, disposable task environment. Do not mount the host home directory, SSH agent, cloud credentials, customer data, or unrelated project directories.
+The current Alpha entrypoint grants the coding agent broad tool permissions. Run it only in an isolated, disposable task environment. Do not mount the host home directory, SSH agent, cloud credentials, customer data, or unrelated project directories.
+
+Claude Code (ralph-loop + supervisor):
 
 Install and start the official Claude Code CLI:
 
@@ -351,6 +353,16 @@ Inside Claude Code, run:
 ```text
 /ar-coordinator ../data/ideas/my_experiment.txt ../data/projects/my_experiment
 ```
+
+Grok Build (same engine; skills/agents/workflows live in `.grok/`):
+
+```bash
+grok --yolo -p "/ar-coordinator examples/ideas/synthetic_gpu_smoke.md data/projects/my_experiment"
+```
+
+`/ar-coordinator` is the interactive skill. The `ar-coordinator` workflow is the unattended
+unit loop (Grok's stand-in for ralph-loop). `/ar-experiment-matrix` fans out independent
+seeds or ablations (default 16, max 32). See `ar-runtime/README.md`.
 
 For non-interactive runs, use the supervisor. It reaps the process group, retries terminal API failures within a restart budget, and stores a manifest for every attempt:
 
