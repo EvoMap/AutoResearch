@@ -83,7 +83,7 @@ Research agents can invent missing details when evidence is thin and repeatedly 
 
 ### 3.1 Clone the Repository and Check the Environment
 
-Prepare a Linux or SSH machine with Git, Python 3.10+, and `python3-venv` installed:
+Prepare a Linux machine, either local or accessible over SSH, with Git, Python 3.10+, and `python3-venv` installed:
 
 ```bash
 git clone https://github.com/EvoMap/AutoResearch.git
@@ -91,7 +91,7 @@ cd AutoResearch
 bash scripts/bringup.sh
 ```
 
-`bringup.sh` creates `.venv`, installs Python dependencies, runs the baseline tests and secret scan, and checks the current model configuration. It does not contact model services or incur API charges.
+`scripts/bringup.sh` creates `.venv`, installs Python dependencies, runs the baseline tests and secret scan, and checks the current model configuration. It does not contact model services or incur API charges.
 
 On the first run, before API credentials are configured, a final `BLOCKED` result or nonzero exit is expected. Confirm that Python setup, dependency installation, and tests succeeded, then configure credentials in the next step.
 
