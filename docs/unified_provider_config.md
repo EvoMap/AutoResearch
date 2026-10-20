@@ -82,6 +82,48 @@ Panel roles such as `ideator` may use several model aliases. Independence is bas
 resolved model identity, not provider branding. Single-seat roles try their configured
 models in order.
 
+## Freshness evidence search
+
+Idea Forge's freshness step keeps arXiv as its default free search source. To use
+web release pages when checking outdated model, dataset and benchmark mentions,
+set this section in `config/providers.local.json`:
+
+```json
+{
+  "freshness_search": {
+    "provider": "parallel",
+    "timeout_seconds": 30,
+    "proxy_contract": "direct"
+  }
+}
+```
+
+[Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp)
+uses Fast mode and works without an account or API key. Install the normal
+`requirements.txt`; no extra service setup is needed. The provider sends the
+detected stale names and a research objective to `https://search.parallel.ai/mcp`,
+then includes returned excerpts and source URLs in the freshness-refresher prompt.
+It performs search only; it does not fetch pages or change Claude agent tools.
+
+Use `provider: "none"` to disable network evidence lookup, or `"arxiv"` to keep
+the paper search. Python callers can pass `search_provider` to
+`step2_5_freshness_refresh` or `refresh_idea_freshness` for a single-call override.
+The existing `enable_arxiv=False` argument disables all network evidence lookup,
+including an explicit Parallel override. Model routing and credentials are unchanged.
+
+Parallel uses direct connections and the system CA trust store by default. For a configured network
+proxy, select the existing `standard-env` contract (`HTTPS_PROXY` / `HTTP_PROXY`,
+respecting `NO_PROXY`) or `autoresearch` (`AUTORESEARCH_PROXY_URL`). An unavailable
+explicit proxy fails the search; it never falls back to a direct connection.
+
+`timeout_seconds` bounds the entire Parallel exchange for one idea (greater than
+zero, at most 300 seconds). Search failure or an anonymous service quota leaves
+the refresher using its existing knowledge-library evidence; it never silently
+switches search providers. Keyboard interrupts cancel the exchange. A freshness
+batch shares one opaque conversation ID across related searches; a new batch or
+standalone refresh starts a new ID. Successful refresh records the selected
+provider and whether search evidence was used in `freshness_refresh`.
+
 ## Verification contract
 
 The following commands must report the same effective config path and digest:

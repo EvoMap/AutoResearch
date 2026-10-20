@@ -70,6 +70,11 @@
   "execution": {
     "max_concurrency": 3
   },
+  "freshness_search": {
+    "provider": "arxiv",
+    "timeout_seconds": 30,
+    "proxy_contract": "direct"
+  },
   "idea_forge": {
     "_b_directions_note": "Empty means use the built-in B library. Values are knowledge_base file stems.",
     "b_directions": []

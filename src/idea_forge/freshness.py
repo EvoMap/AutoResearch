@@ -4,7 +4,7 @@
 设计哲学：当 idea/plan 中提及过时模型/数据集/benchmark 时，**不要击杀好计划**，
 而是从两个维度获取最新版本并就地替换：
   1) 领域方向库（b_library）—— 用户主动维护的权威最新基线
-  2) arxiv 实时搜索 —— 兜底，覆盖领域方向库未及时更新的情况
+  2) 实时搜索 —— 默认 arxiv，可选择 Parallel 网页证据，覆盖方向库未及时更新的情况
 
 输出：
   - 把识别到的过时项映射成最新替代项
@@ -14,14 +14,16 @@
 import re
 import sys
 import time
+import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from llm_client import (call_model, call_role_with_model, configured_request_params,
-                        configured_role_models)
+                        configured_role_models, load_config)
 from api_retry import retry_call
 from idea_forge.b_library import get_b_by_id
+import proxy_contract
 
 # 过时项正则（粗筛）
 STALE_PATTERNS = [
@@ -119,12 +121,28 @@ def build_arxiv_reference(stale_items, max_per_item=3):
     return "\n".join(parts)
 
 
-def refresh_idea_freshness(item, enable_arxiv=True, refresher_model=None):
+def _search_settings(search_provider):
+    settings = load_config().get("freshness_search", {})
+    provider = search_provider if search_provider is not None else settings.get("provider", "arxiv")
+    if provider not in {"arxiv", "parallel", "none"}:
+        raise ValueError("freshness_search.provider must be arxiv, parallel or none")
+    timeout = settings.get("timeout_seconds", 30)
+    if (isinstance(timeout, bool) or not isinstance(timeout, (int, float))
+            or not 0 < timeout <= 300):
+        raise ValueError("freshness_search.timeout_seconds must be in (0, 300]")
+    transport = settings.get("proxy_contract", "direct")
+    if transport not in proxy_contract.CONTRACTS:
+        raise ValueError("freshness_search.proxy_contract must be direct, standard-env or autoresearch")
+    return provider, timeout, transport
+
+
+def refresh_idea_freshness(item, enable_arxiv=True, refresher_model=None,
+                         search_provider=None, *, _search_session_id=None):
     """
     对一条已通过验证的 idea 做时新性刷新：
       1) 正则粗筛过时项
       2) 取 B 库权威基线
-      3) 可选 arxiv 实时搜索
+      3) 可选实时搜索（默认 arxiv，或配置的 Parallel 网页证据）
       4) LLM 改写 idea_text，用最新模型/数据替换过时项
 
     成功返回 True 并就地修改 item['idea_text']；失败返回 False（保留原文）。
@@ -146,7 +164,24 @@ def refresh_idea_freshness(item, enable_arxiv=True, refresher_model=None):
 
     # 构建参考材料
     b_ref = build_b_library_reference(item.get("b_id") or item.get("b_domain", ""))
-    arxiv_ref = build_arxiv_reference(stale, max_per_item=3) if enable_arxiv and stale else ""
+    # Keep the legacy no-network switch authoritative, even for an explicit provider.
+    provider, timeout, transport = (
+        _search_settings(search_provider) if enable_arxiv else ("none", 30, "direct")
+    )
+    search_ref = ""
+    if stale and provider == "arxiv":
+        search_ref = build_arxiv_reference(stale, max_per_item=3)
+    elif stale and provider == "parallel":
+        from idea_forge.parallel_search import build_parallel_reference
+
+        try:
+            search_ref = build_parallel_reference(
+                stale, _search_session_id or str(uuid.uuid4()), timeout=timeout,
+                transport_contract=transport,
+            )
+        except Exception as exc:
+            # An explicitly selected service failing must not trigger another provider.
+            print(f"  [freshness/parallel] 搜索失败: {type(exc).__name__}")
 
     flags_text = "\n".join(flags) if flags else "（粗筛未命中，但 D4 评审有时新性警告，见下）"
 
@@ -161,11 +196,11 @@ def refresh_idea_freshness(item, enable_arxiv=True, refresher_model=None):
         "1. **保留**：核心 idea 一句话、机制映射、论文故事线、方法描述（这些都是好的，不要动）。\n"
         "2. **升级**：仅替换\"关键实验\"段中的\"基线 / 数据集 / benchmark / 评估方法\"为 2025-2026 最新版本。\n"
         "   - 优先采用上面 B 库给出的权威最新基线\n"
-        "   - 如果 B 库缺失某类，参考 arxiv 搜索结果或你自己知道的 2025+ 模型\n"
+        "   - 如果 B 库缺失某类，参考上述联网搜索证据或你自己知道的 2025+ 模型\n"
         "   - 老模型可以保留作为\"过时对比\"消融，但不能作为主基线\n"
         "3. **删除**：明显过时的禁用项（LLaVA-1.5/1.6、Qwen2-VL、InternVL2、Llama-2、Vicuna、GPT-3.5）作为主基线。\n\n"
         + (b_ref + "\n\n" if b_ref else "")
-        + (arxiv_ref + "\n\n" if arxiv_ref else "")
+        + (search_ref + "\n\n" if search_ref else "")
         + "请直接输出升级后的完整方案（不要加额外说明）："
     )
 
@@ -194,24 +229,31 @@ def refresh_idea_freshness(item, enable_arxiv=True, refresher_model=None):
         "stale_detected": stale,
         "refresher": refresher_model,
         "b_library_used": bool(b_ref),
-        "arxiv_used": bool(arxiv_ref),
+        "arxiv_used": provider == "arxiv" and bool(search_ref),
+        "search_provider": provider,
+        "search_evidence_used": bool(search_ref),
         "refreshed_at": datetime.now().isoformat(),
     }
     return True
 
 
-def step2_5_freshness_refresh(validated_ideas, enable_arxiv=True):
+def step2_5_freshness_refresh(validated_ideas, enable_arxiv=True, search_provider=None):
     """
     Step 2.5: 对所有通过严格验证的 idea 做时新性刷新
     返回的列表与输入同长（不会击杀任何 idea，只可能就地升级）
     """
     print("────────────────────────────────────────────────────────────")
     print(f"  Step 2.5: 时新性刷新 ({len(validated_ideas)} 个 idea)")
-    print("  规则：B 库 + arxiv 双渠道；只升级模型/数据，不击杀")
+    print("  规则：B 库 + 配置的搜索来源；只升级模型/数据，不击杀")
 
+    # This batch is one research run. Related ideas share an ID, new batches do not.
+    search_session_id = str(uuid.uuid4())
     refreshed_count = 0
     for i, item in enumerate(validated_ideas):
-        ok = refresh_idea_freshness(item, enable_arxiv=enable_arxiv)
+        ok = refresh_idea_freshness(
+            item, enable_arxiv=enable_arxiv, search_provider=search_provider,
+            _search_session_id=search_session_id,
+        )
         if ok:
             refreshed_count += 1
         else:
